@@ -17,7 +17,17 @@ public class ConcatList<E> extends ConcatCollection<E> implements List<E> {
 
 	@Override
 	public E get(int i) {
-		throw new UnsupportedOperationException();
+		validateIndex(i);
+		var min = 0;
+		for (List<E> list : lists) {
+			var s = list.size();
+			var max = min + s;
+			if (i < max) {
+				return list.get(i - min);
+			}
+			min = max;
+		}
+		throw new IllegalStateException();
 	}
 
 	@Override
@@ -73,5 +83,12 @@ public class ConcatList<E> extends ConcatCollection<E> implements List<E> {
 	@Override
 	public boolean addAll(int i, Collection<? extends E> collection) {
 		throw new UnsupportedOperationException();
+	}
+
+	private void validateIndex(int index) {
+		var size = size();
+		if (index < 0 || index >= size) {
+			throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+		}
 	}
 }
