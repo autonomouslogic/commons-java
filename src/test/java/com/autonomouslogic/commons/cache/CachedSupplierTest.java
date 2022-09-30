@@ -38,9 +38,9 @@ public class CachedSupplierTest {
 
 	@Test
 	public void shouldOnlyCallSupplierOnce() {
-		assertSame("result", cachedSupplier.get());
+		assertEquals("result", cachedSupplier.get());
 		verify(supplier).get();
-		assertSame("result", cachedSupplier.get());
+		assertEquals("result", cachedSupplier.get());
 		verifyNoMoreInteractions(supplier);
 	}
 
