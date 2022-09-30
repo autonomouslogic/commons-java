@@ -1,0 +1,38 @@
+plugins {
+	id "java"
+	id "idea"
+	id "application"
+	id "jacoco"
+	id "io.freefair.lombok" version "6.3.0"
+	id "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin" version "0.3.18"
+	id "com.diffplug.spotless" version "6.11.0"
+}
+
+group "com.autonomouslogic"
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	testImplementation "org.junit.jupiter:junit-jupiter-api:5.8.1"
+	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.8.1"
+}
+
+test {
+	useJUnitPlatform()
+}
+
+spotless {
+	java {
+		palantirJavaFormat()
+		indentWithTabs()
+	}
+
+	groovyGradle {
+		indentWithTabs()
+	}
+}
