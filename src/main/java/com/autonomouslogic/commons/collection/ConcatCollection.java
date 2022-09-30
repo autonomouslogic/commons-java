@@ -1,17 +1,10 @@
 package com.autonomouslogic.commons.collection;
 
 import com.google.common.collect.Iterators;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Spliterator;
-import java.util.function.Consumer;
-import java.util.function.IntFunction;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 abstract class ConcatCollection<E> implements Collection<E> {
@@ -19,9 +12,7 @@ abstract class ConcatCollection<E> implements Collection<E> {
 
 	@Override
 	public int size() {
-		return collections.stream()
-			.mapToInt(Collection::size)
-			.sum();
+		return collections.stream().mapToInt(Collection::size).sum();
 	}
 
 	@Override

@@ -1,14 +1,11 @@
 package com.autonomouslogic.commons.collection;
 
-import lombok.RequiredArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 public class ConcatList<E> extends ConcatCollection<E> implements List<E> {
 	private final List<List<E>> lists;

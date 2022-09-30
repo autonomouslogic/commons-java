@@ -1,7 +1,6 @@
 package com.autonomouslogic.commons;
 
 import com.autonomouslogic.commons.collection.ConcatList;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,9 +11,7 @@ public class ListUtil {
 	}
 
 	public static <E> List<E> concatCopy(List<E>... lists) {
-		var n = Arrays.stream(lists)
-			.mapToInt(List::size)
-			.sum();
+		var n = Arrays.stream(lists).mapToInt(List::size).sum();
 		List<E> concat = new ArrayList<>(n);
 		for (List<E> list : lists) {
 			concat.addAll(list);

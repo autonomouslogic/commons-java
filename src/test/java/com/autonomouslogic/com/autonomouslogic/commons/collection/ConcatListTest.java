@@ -1,16 +1,13 @@
 package com.autonomouslogic.com.autonomouslogic.commons.collection;
 
-import com.autonomouslogic.commons.ListUtil;
-import com.autonomouslogic.commons.collection.ConcatList;
-import org.junit.jupiter.api.Test;
-
-import javax.swing.plaf.ListUI;
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.autonomouslogic.commons.ListUtil;
+import com.autonomouslogic.commons.collection.ConcatList;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
 public class ConcatListTest {
 	ConcatList<String> concat = ListUtil.concat(List.of("a", "b"), List.of("c", "d"));
