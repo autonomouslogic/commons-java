@@ -5,12 +5,36 @@
 [![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/autonomouslogic/commons-java/Test/main)](https://github.com/autonomouslogic/commons-java/actions)
 [![GitHub](https://img.shields.io/github/license/autonomouslogic/commons-java)](https://spdx.org/licenses/MIT-0.html)
 
-Common Java functions not found in other commons libraries.
+Common Java functionality.
+The implementations in this library are intended to solve simple problems in simple ways.
 
 * [ListUtil](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/ListUtil.java)
 * [SetUtil](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/SetUtil.java)
 * [ResourceUtil](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/ResourceUtil.java)
 * [CachedSupplier](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/cache/CachedSupplier.java)
+* [Stopwatch](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/Stopwatch.java)
+
+## Usage
+
+Gradle:
+```
+implementation 'com.autonomouslogic.commons:commons-java:version'
+```
+
+Maven:
+```
+<dependency>
+  <groupId>com.autonomouslogic.commons</groupId>
+  <artifactId>commons-java</artifactId>
+  <version>version</version>
+</dependency>
+```
+
+## Other Common Libraries
+
+* [Apache Commons](https://commons.apache.org/)
+* [Guava](https://github.com/google/guava)
+* [Durian](https://github.com/diffplug/durian)
 
 ## Versioning
 This project follows [semantic versioning](https://semver.org/).
