@@ -6,6 +6,9 @@ plugins {
 	id "io.freefair.lombok" version "6.3.0"
 	id "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin" version "0.3.18"
 	id "com.diffplug.spotless" version "6.11.0"
+	id "maven-publish"
+	id "signing"
+	id "io.github.gradle-nexus.publish-plugin" version "1.1.0"
 }
 
 group "com.autonomouslogic.commons"
@@ -55,5 +58,46 @@ spotless {
 
 	groovyGradle {
 		indentWithTabs()
+	}
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			pom {
+				name = "Commons Java"
+				description = "Commons Java functions."
+				url = "https://github.com/autonomouslogic/commons-java"
+				licenses {
+					license {
+						name = "MIT-0"
+						url = "https://spdx.org/licenses/MIT-0.html"
+					}
+				}
+				developers {
+					developer {
+						id = "kennethjor"
+						name = "Kenneth Jørgensen"
+						email = "kenneth@autonomouslogic.com"
+					}
+				}
+				scm {
+					connection = "scm:git:git://github.com:autonomouslogic/commons-java.git"
+					developerConnection = "scm:git:ssh://github.com:autonomouslogic/commons-java.git"
+					url = "https://github.com/autonomouslogic/commons-java"
+				}
+			}
+			from(components.java)
+		}
+	}
+}
+
+signing {
+	sign publishing.publications.mavenJava
+}
+
+nexusPublishing {
+	repositories {
+		sonatype()
 	}
 }
