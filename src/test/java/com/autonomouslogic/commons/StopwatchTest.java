@@ -2,7 +2,6 @@ package com.autonomouslogic.commons;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.autonomouslogic.commons.Stopwatch;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
