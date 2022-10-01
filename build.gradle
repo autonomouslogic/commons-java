@@ -28,6 +28,23 @@ dependencies {
 
 test {
 	useJUnitPlatform()
+
+	testLogging {
+		events = [ "FAILED", "PASSED", "SKIPPED" ]
+		showExceptions = true
+		exceptionFormat = "FULL"
+		showExceptions = true
+		showCauses = true
+		showStackTraces = true
+	}
+}
+
+jacocoTestReport {
+	executionData(test)
+	reports {
+		xml.enabled true
+		html.enabled true
+	}
 }
 
 spotless {
