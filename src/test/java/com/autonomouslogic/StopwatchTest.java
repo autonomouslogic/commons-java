@@ -18,4 +18,27 @@ public class StopwatchTest {
 		double time = finish - start;
 		assertEquals(time, watch.getNanos(), 10e6); // within 10 ms to allow for GC.
 	}
+
+	@Test
+	@SneakyThrows
+	public void shouldContinueMeasuringTime() {
+		// First run.
+		var start1 = System.nanoTime();
+		var watch = Stopwatch.start();
+		Thread.sleep(500);
+		var finish1 = System.nanoTime();
+		watch.stop();
+
+		Thread.sleep(500);
+
+		// Second run.
+		var start2 = System.nanoTime();
+		watch.restart();
+		Thread.sleep(500);
+		var finish2 = System.nanoTime();
+		watch.stop();
+
+		double time = finish1 - start1 + finish2 - start2;
+		assertEquals(time, watch.getNanos(), 10e6); // within 10 ms to allow for GC.
+	}
 }

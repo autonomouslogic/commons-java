@@ -12,6 +12,7 @@ The implementations in this library are intended to solve simple problems in sim
 * [SetUtil](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/SetUtil.java)
 * [ResourceUtil](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/ResourceUtil.java)
 * [CachedSupplier](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/cache/CachedSupplier.java)
+* [Stopwatch](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/Stopwatch.java)
 
 ## Usage
 
