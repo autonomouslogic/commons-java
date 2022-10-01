@@ -1,2 +1,29 @@
-# commons-java
-Common Java functions
+# Autonomous Logic Commons Java
+
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/autonomouslogic/commons-java)](https://github.com/autonomouslogic/commons-java/releases)
+[![javadoc](https://javadoc.io/badge2/com.autonomouslogic.commons/commons-java/javadoc.svg)](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java)
+[![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/autonomouslogic/commons-java/Test/main)](https://github.com/autonomouslogic/commons-java/actions)
+[![GitHub](https://img.shields.io/github/license/autonomouslogic/commons-java)](https://spdx.org/licenses/MIT-0.html)
+
+Common Java functions not found in other commons libraries.
+
+## Versioning
+This project follows [semantic versioning](https://semver.org/).
+
+## Code Style
+This project follows Palantir with tabs.
+Automatic code formatting can be done by running `./gradlew spotlessApply`.
+
+## License
+This project is licensed under the [MIT-0 license](https://spdx.org/licenses/MIT-0.html).
+
+## Status
+| Type          | Status                                                                                                                                                                                                                                                                                                                                                                                                            |
+|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| LGTM          | [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/autonomouslogic/commons-java.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/autonomouslogic/commons-java/context:java) [![Total alerts](https://img.shields.io/lgtm/alerts/g/autonomouslogic/commons-java.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/autonomouslogic/commons-java/alerts/)                              |
+| CodeClimate   | [![Maintainability](https://api.codeclimate.com/v1/badges/04243b52f38c8cecf66c/maintainability)](https://codeclimate.com/github/autonomouslogic/commons-java/maintainability)                                                                                                                                                                                                                                     |
+| SonarCloud    | [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=autonomouslogic_commons-java&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=autonomouslogic_commons-java) [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=autonomouslogic_commons-java&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=autonomouslogic_commons-java) |
+| Libraries.io  | ![Libraries.io dependency status for latest release](https://img.shields.io/librariesio/release/maven/com.autonomouslogic.commons:commons-java)                                                                                                                                                                                                                                                                   |
+| Snyk          | [![Known Vulnerabilities](https://snyk.io/test/github/autonomouslogic/commons-java/badge.svg)](https://snyk.io/test/github/autonomouslogic/commons-java)                                                                                                                                                                                                                                                          |
+| Codecov       | [![codecov](https://codecov.io/gh/autonomouslogic/commons-java/branch/main/graph/badge.svg?token=C5CO3GPGV3)](https://codecov.io/gh/autonomouslogic/commons-java)                                                                                                                                                                                                                                                 |
+| Synatype Lift | [link](https://lift.sonatype.com/)                                                                                                                                                                                                                                                                                                                                                                                |
