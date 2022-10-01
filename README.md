@@ -36,28 +36,6 @@ Maven:
 * [Guava](https://github.com/google/guava)
 * [Durian](https://github.com/diffplug/durian)
 
-## Usage
-
-Gradle:
-```
-implementation 'com.autonomouslogic.commons:commons-java:version'
-```
-
-Maven:
-```
-<dependency>
-  <groupId>com.autonomouslogic.commons</groupId>
-  <artifactId>commons-java</artifactId>
-  <version>version</version>
-</dependency>
-```
-
-## Other Common Libraries
-
-* [Apache Commons](https://commons.apache.org/)
-* [Guava](https://github.com/google/guava)
-* [Durian](https://github.com/diffplug/durian)
-
 ## Versioning
 This project follows [semantic versioning](https://semver.org/).
 
