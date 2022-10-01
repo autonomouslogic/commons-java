@@ -47,12 +47,31 @@ public class ConcatList<E> extends ConcatCollection<E> implements List<E> {
 
 	@Override
 	public int indexOf(Object o) {
-		throw new UnsupportedOperationException();
+		var offset = 0;
+		for (List<E> list : lists) {
+			var i = list.indexOf(o);
+			if (i >= 0) {
+				return offset + i;
+			}
+			offset += list.size();
+		}
+		return -1;
 	}
 
 	@Override
 	public int lastIndexOf(Object o) {
-		throw new UnsupportedOperationException();
+		var n = lists.size();
+		for (int l = n - 1; l >= 0; l--) {
+			var list = lists.get(l);
+			var i = list.lastIndexOf(o);
+			if (i >= 0) {
+				for (int r = l - 1; r >= 0; r--) {
+					i += lists.get(r).size();
+				}
+				return i;
+			}
+		}
+		return -1;
 	}
 
 	@Override
