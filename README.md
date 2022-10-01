@@ -7,6 +7,11 @@
 
 Common Java functions not found in other commons libraries.
 
+* [ListUtil](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/ListUtil.java)
+* [SetUtil](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/SetUtil.java)
+* [ResourceUtil](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/ResourceUtil.java)
+* [CachedSupplier](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/cache/CachedSupplier.java)
+
 ## Versioning
 This project follows [semantic versioning](https://semver.org/).
 
