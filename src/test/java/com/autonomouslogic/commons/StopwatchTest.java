@@ -1,4 +1,4 @@
-package com.autonomouslogic;
+package com.autonomouslogic.commons;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
