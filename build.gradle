@@ -61,6 +61,11 @@ spotless {
 	}
 }
 
+java {
+	withJavadocJar()
+	withSourcesJar()
+}
+
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
