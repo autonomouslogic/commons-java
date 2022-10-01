@@ -1,8 +1,7 @@
 package com.autonomouslogic.commons;
 
-import lombok.Getter;
-
 import java.time.Duration;
+import lombok.Getter;
 
 /**
  * Measures elapsed time.
