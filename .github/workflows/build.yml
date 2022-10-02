@@ -18,6 +18,9 @@ jobs:
       - name: Test
         run: ./gradlew test --stacktrace
 
+      - name: Javadoc
+        run: ./gradlew javadoc --stacktrace
+
       - name: Code Coverage
         run: ./gradlew jacocoTestReport --stacktrace
 
