@@ -1,5 +1,42 @@
 Commons Java Changelog
 
+## [1.1.0](https://github.com/autonomouslogic/commons-java/compare/1.0.0...1.1.0) (2022-10-03)
+
+
+### Features
+
+* Stopwatch ([#7](https://github.com/autonomouslogic/commons-java/issues/7)) ([fc3c5f9](https://github.com/autonomouslogic/commons-java/commit/fc3c5f9b6ade07043c93097168dcbf2e094ec25f))
+
+
+### Continuous Integration
+
+* Enabled automaic release. ([326963d](https://github.com/autonomouslogic/commons-java/commit/326963d7089dd44bdbe0cb9bde4f80ae2a460d4e))
+
+
+### Styles
+
+* Spotless. ([80a14c1](https://github.com/autonomouslogic/commons-java/commit/80a14c16b424781a2cca9aa3ae4487eca4898374))
+
+
+### Documentation
+
+* More docs. ([c0a14ca](https://github.com/autonomouslogic/commons-java/commit/c0a14ca4c5e45b1c33f04e5fc6d090f1bb96c5de))
+* More documentation. ([22e8688](https://github.com/autonomouslogic/commons-java/commit/22e8688f90f97ea9540809e183dfd28fc83c224b))
+* Readme. ([f6e5b8d](https://github.com/autonomouslogic/commons-java/commit/f6e5b8da0333535026910b138e859c3796d278e4))
+
+
+### Build System
+
+* Added javadoc task to standard build. ([a241f7a](https://github.com/autonomouslogic/commons-java/commit/a241f7a2258a9ee126333f65cb3a28b77f8281a1))
+* Fixed Javadoc generation. ([0de3659](https://github.com/autonomouslogic/commons-java/commit/0de3659724e477c292edf7690a826032ab5accd7))
+
+
+### Miscellaneous Chores
+
+* Correct package on test. ([f3659eb](https://github.com/autonomouslogic/commons-java/commit/f3659eb45b7b0f49b55947d349e2e5d1b2960a9f))
+* Correct package on test. ([25e385a](https://github.com/autonomouslogic/commons-java/commit/25e385afdd615bcb172c324ffa7878e9a13f7f81))
+* **deps:** update all non-major dependencies ([#9](https://github.com/autonomouslogic/commons-java/issues/9)) ([655afa0](https://github.com/autonomouslogic/commons-java/commit/655afa031942bf25d0aa719d10c078db84be5511))
+
 ## 1.0.0 (2022-10-01)
 
 
