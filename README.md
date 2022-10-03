@@ -8,11 +8,11 @@
 Common Java functionality.
 The implementations in this library are intended to solve simple problems in simple ways.
 
-* [ListUtil](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/ListUtil.java)
-* [SetUtil](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/SetUtil.java)
-* [ResourceUtil](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/ResourceUtil.java)
-* [CachedSupplier](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/cache/CachedSupplier.java)
-* [Stopwatch](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/Stopwatch.java)
+* [ListUtil](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/ListUtil.html)
+* [SetUtil](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/SetUtil.html)
+* [ResourceUtil](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/ResourceUtil.html)
+* [CachedSupplier](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/cache/CachedSupplier.html)
+* [Stopwatch](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/Stopwatch.html)
 
 ## Usage
 
