@@ -1,5 +1,23 @@
 Commons Java Changelog
 
+## [1.1.1](https://github.com/autonomouslogic/commons-java/compare/1.1.0...1.1.1) (2022-11-07)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#11](https://github.com/autonomouslogic/commons-java/issues/11)) ([40faae3](https://github.com/autonomouslogic/commons-java/commit/40faae3b2c00d28de86b2a01df7e8f6826bd87c9))
+
+
+### Documentation
+
+* Changed class links to javadoc.io. ([5ded9cd](https://github.com/autonomouslogic/commons-java/commit/5ded9cd469ec95fcad1f8311b933babb88b144e6))
+
+
+### Miscellaneous Chores
+
+* **deps:** update amannn/action-semantic-pull-request action to v5 ([#10](https://github.com/autonomouslogic/commons-java/issues/10)) ([4731ce3](https://github.com/autonomouslogic/commons-java/commit/4731ce397d4e67d0a95a3aca758f0bc1444cf3c1))
+* removed build classes. ([d2a086f](https://github.com/autonomouslogic/commons-java/commit/d2a086f845e39a0e490031eac13b98079b3c7fe4))
+
 ## [1.1.0](https://github.com/autonomouslogic/commons-java/compare/1.0.0...1.1.0) (2022-10-03)
 
 
