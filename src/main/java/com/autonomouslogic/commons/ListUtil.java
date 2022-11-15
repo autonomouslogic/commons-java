@@ -6,8 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ListUtil {
-	private ListUtil() {
-	}
+	private ListUtil() {}
 
 	/**
 	 * Concatenates the supplied list without explicitly copying every single element.

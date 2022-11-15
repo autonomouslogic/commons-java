@@ -9,8 +9,7 @@ import java.io.InputStream;
 public class ResourceUtil {
 	private static final char RESOURCE_SEPARATOR = '/';
 
-	private ResourceUtil() {
-	}
+	private ResourceUtil() {}
 
 	/**
 	 * Loads a resource as an {@link InputStream}, throwing an exception if not found rather than simply returning null.
