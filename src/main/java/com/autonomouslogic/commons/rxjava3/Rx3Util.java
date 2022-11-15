@@ -10,6 +10,8 @@ import java.util.concurrent.Future;
  * Various helper methods for working with RxJava 3.
  */
 public class Rx3Util {
+	private Rx3Util() {}
+
 	/**
 	 * Converts a {@link CompletionStage} to a {@link Single}.
 	 *

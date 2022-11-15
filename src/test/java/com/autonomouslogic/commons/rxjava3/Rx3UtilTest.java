@@ -9,48 +9,48 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
-public class Rx3UtilTest {
+class Rx3UtilTest {
 	RuntimeException textEx = new RuntimeException("test error");
 
 	@Test
-	public void shouldConvertCompletionStageToSingle() {
+	void shouldConvertCompletionStageToSingle() {
 		var future = CompletableFuture.completedStage("test");
 		var result = Rx3Util.toSingle(future).blockingGet();
 		assertEquals("test", result);
 	}
 
 	@Test
-	public void shouldCatchCompletionStageErrorsToSingle() {
+	void shouldCatchCompletionStageErrorsToSingle() {
 		var future = CompletableFuture.failedStage(textEx);
-		var ex = assertThrows(
-				RuntimeException.class, () -> Rx3Util.toSingle(future).blockingGet());
+		var single = Rx3Util.toSingle(future);
+		var ex = assertThrows(RuntimeException.class, single::blockingGet);
 		assertEquals("java.lang.RuntimeException: test error", ex.getMessage());
 	}
 
 	@Test
-	public void shouldConvertCompletionStageToMaybe() {
+	void shouldConvertCompletionStageToMaybe() {
 		var future = CompletableFuture.completedStage("test");
 		var result = Rx3Util.toMaybe(future).blockingGet();
 		assertEquals("test", result);
 	}
 
 	@Test
-	public void shouldConvertCompletionStageNullResultToMaybe() {
+	void shouldConvertCompletionStageNullResultToMaybe() {
 		var future = CompletableFuture.completedStage(null);
 		var result = Rx3Util.toMaybe(future).defaultIfEmpty("empty").blockingGet();
 		assertEquals("empty", result);
 	}
 
 	@Test
-	public void shouldCatchCompletionStageErrorsToMaybe() {
+	void shouldCatchCompletionStageErrorsToMaybe() {
 		var future = CompletableFuture.failedStage(textEx);
-		var ex = assertThrows(
-				RuntimeException.class, () -> Rx3Util.toMaybe(future).blockingGet());
+		var maybe = Rx3Util.toMaybe(future);
+		var ex = assertThrows(RuntimeException.class, maybe::blockingGet);
 		assertEquals("java.lang.RuntimeException: test error", ex.getMessage());
 	}
 
 	@Test
-	public void shouldConvertCompletionStageToCompletable() {
+	void shouldConvertCompletionStageToCompletable() {
 		var future = CompletableFuture.completedStage((Void) null);
 		AtomicBoolean complete = new AtomicBoolean();
 		Rx3Util.toCompletable(future).doOnComplete(() -> complete.set(true)).blockingAwait();
@@ -58,12 +58,12 @@ public class Rx3UtilTest {
 	}
 
 	@Test
-	public void shouldCatchCompletionStageErrorsToCompletable() {
+	void shouldCatchCompletionStageErrorsToCompletable() {
 		var future = CompletableFuture.supplyAsync((Supplier<Void>) () -> {
 			throw textEx;
 		});
-		var ex = assertThrows(
-				RuntimeException.class, () -> Rx3Util.toCompletable(future).blockingAwait());
+		var completable = Rx3Util.toCompletable(future);
+		var ex = assertThrows(RuntimeException.class, completable::blockingAwait);
 		assertEquals("java.lang.RuntimeException: test error", ex.getMessage());
 	}
 }
