@@ -13,6 +13,7 @@ The implementations in this library are intended to solve simple problems in sim
 * [ResourceUtil](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/ResourceUtil.html)
 * [CachedSupplier](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/cache/CachedSupplier.html)
 * [Stopwatch](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/Stopwatch.html)
+* [Rx3Util](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/rxjava3/Rx3Util.html)
 
 ## Usage
 
