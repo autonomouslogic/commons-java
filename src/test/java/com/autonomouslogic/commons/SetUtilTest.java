@@ -26,10 +26,24 @@ class SetUtilTest {
 	}
 
 	@Test
+	void shouldNotFailOnNoArgsMerge() {
+		var merged = SetUtil.mergeCopy();
+		assertEquals(Set.of(), merged);
+	}
+
+	@Test
 	void shouldAddSetsToTarget() {
 		var existing = new HashSet<String>();
 		existing.add("_");
 		SetUtil.addAll(existing, a, b);
 		assertEquals(Set.of("_", "x", "b", "c", "q"), existing);
+	}
+
+	@Test
+	void shouldNotFailOnNoArgsAdd() {
+		var existing = new HashSet<String>();
+		existing.add("_");
+		SetUtil.addAll(existing);
+		assertEquals(Set.of("_"), existing);
 	}
 }

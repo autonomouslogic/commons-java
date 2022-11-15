@@ -75,4 +75,19 @@ class ConcatListTest {
 		assertEquals(4, concat.lastIndexOf("a"));
 		assertEquals(-1, concat.lastIndexOf("other"));
 	}
+
+	@Test
+	void testIsEmpty() {
+		assertFalse(concat.isEmpty());
+	}
+
+	@Test
+	void shouldReportEmptyOnNothing() {
+		assertTrue(ListUtil.concat().isEmpty());
+	}
+
+	@Test
+	void shouldReportEmptyOnEmptyDelegates() {
+		assertTrue(ListUtil.concat(List.of(), List.of()).isEmpty());
+	}
 }
