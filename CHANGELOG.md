@@ -1,5 +1,12 @@
 Commons Java Changelog
 
+## [1.2.0](https://github.com/autonomouslogic/commons-java/compare/1.1.1...1.2.0) (2022-11-15)
+
+
+### Features
+
+* RxJava util for converting CompletionStages ([#12](https://github.com/autonomouslogic/commons-java/issues/12)) ([9d3e0dc](https://github.com/autonomouslogic/commons-java/commit/9d3e0dc813674ac31a02a4d1e5b027083d9713bc))
+
 ## [1.1.1](https://github.com/autonomouslogic/commons-java/compare/1.1.0...1.1.1) (2022-11-07)
 
 
