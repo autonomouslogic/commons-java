@@ -9,10 +9,10 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 
-public class ResourceUtilTest {
+class ResourceUtilTest {
 	@Test
 	@SneakyThrows
-	public void shouldLoadResourcesFromRoot() {
+	void shouldLoadResourcesFromRoot() {
 		var in = ResourceUtil.loadResource("/test.txt");
 		var content = IOUtils.toString(in, Charset.defaultCharset());
 		assertEquals("Test content\n", content);
@@ -20,7 +20,7 @@ public class ResourceUtilTest {
 
 	@Test
 	@SneakyThrows
-	public void shouldLoadContextualResources() {
+	void shouldLoadContextualResources() {
 		var in = ResourceUtil.loadContextual(ResourceUtilTest.class, "/test.txt");
 		var content = IOUtils.toString(in, Charset.defaultCharset());
 		assertEquals("Contextual content\n", content);
@@ -28,7 +28,7 @@ public class ResourceUtilTest {
 
 	@Test
 	@SneakyThrows
-	public void shouldThrowWhenFileNotFound() {
+	void shouldThrowWhenFileNotFound() {
 		assertThrows(FileNotFoundException.class, () -> ResourceUtil.loadResource("/unknown"));
 	}
 }

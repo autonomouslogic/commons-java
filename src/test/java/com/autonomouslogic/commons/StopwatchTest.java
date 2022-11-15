@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
-public class StopwatchTest {
+class StopwatchTest {
 	@Test
 	@SneakyThrows
-	public void shouldMeasureTime() {
+	void shouldMeasureTime() {
 		var start = System.nanoTime();
 		var watch = Stopwatch.start();
 		Thread.sleep(500);
@@ -20,7 +20,7 @@ public class StopwatchTest {
 
 	@Test
 	@SneakyThrows
-	public void shouldContinueMeasuringTime() {
+	void shouldContinueMeasuringTime() {
 		// First run.
 		var start1 = System.nanoTime();
 		var watch = Stopwatch.start();

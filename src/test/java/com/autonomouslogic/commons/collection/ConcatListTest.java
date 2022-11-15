@@ -9,21 +9,21 @@ import com.autonomouslogic.commons.ListUtil;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public class ConcatListTest {
+class ConcatListTest {
 	ConcatList<String> concat = ListUtil.concat(List.of("a", "b"), List.of("c", "d", "a"));
 
 	@Test
-	public void testEquals() {
+	void testEquals() {
 		assertEquals(List.of("a", "b", "c", "d", "a"), concat);
 	}
 
 	@Test
-	public void testSize() {
+	void testSize() {
 		assertEquals(5, concat.size());
 	}
 
 	@Test
-	public void testGet() {
+	void testGet() {
 		assertEquals("a", concat.get(0));
 		assertEquals("b", concat.get(1));
 		assertEquals("c", concat.get(2));
@@ -34,7 +34,7 @@ public class ConcatListTest {
 	}
 
 	@Test
-	public void testContains() {
+	void testContains() {
 		assertTrue(concat.contains("a"));
 		assertTrue(concat.contains("b"));
 		assertTrue(concat.contains("c"));
@@ -43,7 +43,7 @@ public class ConcatListTest {
 	}
 
 	@Test
-	public void testIterator() {
+	void testIterator() {
 		var iterator = concat.iterator();
 		assertTrue(iterator.hasNext());
 		assertEquals("a", iterator.next());
@@ -59,7 +59,7 @@ public class ConcatListTest {
 	}
 
 	@Test
-	public void testIndexOf() {
+	void testIndexOf() {
 		assertEquals(0, concat.indexOf("a"));
 		assertEquals(1, concat.indexOf("b"));
 		assertEquals(2, concat.indexOf("c"));
@@ -68,7 +68,7 @@ public class ConcatListTest {
 	}
 
 	@Test
-	public void testLastIndexOf() {
+	void testLastIndexOf() {
 		assertEquals(1, concat.lastIndexOf("b"));
 		assertEquals(2, concat.lastIndexOf("c"));
 		assertEquals(3, concat.lastIndexOf("d"));

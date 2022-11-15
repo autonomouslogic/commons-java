@@ -7,6 +7,11 @@ import java.io.InputStream;
  * Loads class resources.
  */
 public class ResourceUtil {
+	private static final char RESOURCE_SEPARATOR = '/';
+
+	private ResourceUtil() {
+	}
+
 	/**
 	 * Loads a resource as an {@link InputStream}, throwing an exception if not found rather than simply returning null.
 	 * @param path the path to load
@@ -24,7 +29,7 @@ public class ResourceUtil {
 	 * @return the input stream for the resource
 	 * @throws FileNotFoundException if not found
 	 */
-	public static InputStream loadResource(Class clazz, String path) throws FileNotFoundException {
+	public static InputStream loadResource(Class<?> clazz, String path) throws FileNotFoundException {
 		var in = clazz.getResourceAsStream(path);
 		if (in == null) {
 			throw new FileNotFoundException(path);
@@ -44,8 +49,8 @@ public class ResourceUtil {
 	 * @return the input stream for the resource
 	 * @throws FileNotFoundException if not found
 	 */
-	public static InputStream loadContextual(Class clazz, String path) throws FileNotFoundException {
-		var fullPath = "/" + clazz.getCanonicalName().replace('.', '/') + path;
+	public static InputStream loadContextual(Class<?> clazz, String path) throws FileNotFoundException {
+		var fullPath = RESOURCE_SEPARATOR + clazz.getCanonicalName().replace('.', RESOURCE_SEPARATOR) + path;
 		return loadResource(clazz, fullPath);
 	}
 }
