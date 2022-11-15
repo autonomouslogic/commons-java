@@ -11,12 +11,12 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class CachedSupplierTest {
+class CachedSupplierTest {
 	Supplier<String> supplier;
 	CachedSupplier<String> cachedSupplier;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		supplier = spy(new Supplier<String>() {
 			@Override
 			public String get() {
@@ -27,17 +27,17 @@ public class CachedSupplierTest {
 	}
 
 	@Test
-	public void shouldDelegate() {
+	void shouldDelegate() {
 		assertEquals("result", cachedSupplier.get());
 	}
 
 	@Test
-	public void shouldCacheValues() {
+	void shouldCacheValues() {
 		assertSame(cachedSupplier.get(), cachedSupplier.get());
 	}
 
 	@Test
-	public void shouldOnlyCallSupplierOnce() {
+	void shouldOnlyCallSupplierOnce() {
 		assertEquals("result", cachedSupplier.get());
 		verify(supplier).get();
 		assertEquals("result", cachedSupplier.get());
@@ -45,7 +45,7 @@ public class CachedSupplierTest {
 	}
 
 	@Test
-	public void shouldCacheNullValues() {
+	void shouldCacheNullValues() {
 		supplier = spy(new Supplier<String>() {
 			@Override
 			public String get() {

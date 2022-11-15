@@ -5,6 +5,8 @@ import java.util.Set;
 import lombok.NonNull;
 
 public class SetUtil {
+	private SetUtil() {}
+
 	/**
 	 * Merges the supplied sets into a {@link LinkedHashSet} instance.
 	 * @param sets the sets to be merged

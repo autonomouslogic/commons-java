@@ -1,7 +1,5 @@
 package com.autonomouslogic.commons.cache;
 
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
 
@@ -12,7 +10,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CachedSupplier<T> implements Supplier<T> {
 	private final Supplier<T> delegate;
-	private final AtomicReference<Optional<T>> value = new AtomicReference<>();
+	private boolean fetched;
+	private T value;
 
 	/**
 	 * Returns the result of the delegate supplier, or the cached value if present.
@@ -20,12 +19,10 @@ public class CachedSupplier<T> implements Supplier<T> {
 	 */
 	@Override
 	public T get() {
-		var cached = value.get();
-		if (cached == null) {
-			var v = delegate.get();
-			value.set(Optional.ofNullable(v));
-			return v;
+		if (!fetched) {
+			value = delegate.get();
+			fetched = true;
 		}
-		return cached.orElse(null);
+		return value;
 	}
 }
