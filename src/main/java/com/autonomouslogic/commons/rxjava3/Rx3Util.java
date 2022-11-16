@@ -99,31 +99,28 @@ public class Rx3Util {
 	 * @param message message for the exception
 	 * @param transformer transformer used for composition
 	 * @return a new transformer
-	 * @param <Upstream> see ObservableTransformer
-	 * @param <Downstream> see ObservableTransformer
+	 * @param <U> see ObservableTransformer
+	 * @param <D> see ObservableTransformer
 	 */
-	public static <Upstream, Downstream> ObservableTransformer<Upstream, Downstream> wrapTransformerErrors(
-			String message, ObservableTransformer<Upstream, Downstream> transformer) {
+	public static <U, D> ObservableTransformer<U, D> wrapTransformerErrors(
+			String message, ObservableTransformer<U, D> transformer) {
 		return new ErrorWrapObservableTransformer<>(message, transformer);
 	}
 
 	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-	private static final class ErrorWrapObservableTransformer<Upstream, Downstream>
-			implements ObservableTransformer<Upstream, Downstream> {
+	private static final class ErrorWrapObservableTransformer<U, D> implements ObservableTransformer<U, D> {
 		private final String message;
-		private final ObservableTransformer<Upstream, Downstream> transformer;
+		private final ObservableTransformer<U, D> transformer;
 		private boolean upstreamError = false;
 
 		@Override
-		public @NonNull ObservableSource<Downstream> apply(@NonNull Observable<Upstream> upstream) {
-			return upstream.doOnError(e -> upstreamError = true)
-					.compose(transformer)
-					.onErrorResumeNext(e -> {
-						if (!upstreamError) {
-							return Observable.error(new RuntimeException(message, e));
-						}
-						return Observable.error(e);
-					});
+		public @NonNull ObservableSource<D> apply(@NonNull Observable<U> U) {
+			return U.doOnError(e -> upstreamError = true).compose(transformer).onErrorResumeNext(e -> {
+				if (!upstreamError) {
+					return Observable.error(new RuntimeException(message, e));
+				}
+				return Observable.error(e);
+			});
 		}
 	}
 }
