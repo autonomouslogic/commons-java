@@ -1,10 +1,16 @@
 package com.autonomouslogic.commons.rxjava3;
 
+import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableSource;
+import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.core.Single;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Various helper methods for working with RxJava 3.
@@ -81,5 +87,42 @@ public class Rx3Util {
 						return null;
 					});
 		});
+	}
+
+	/**
+	 * Wraps an {@link ObservableTransformer} such that any errors thrown from anything done by the
+	 * <code>transformer</code> will be wrapped in a {@link RuntimeException} with the provided message.
+	 * Any errors occurring before or after the <code>transformer</code> is applied are not subject to exception
+	 * wrapping.
+	 * This is useful when debugging multithreaded asynchronous code where the relevant stack trace can get lost.
+	 *
+	 * @param message message for the exception
+	 * @param transformer transformer used for composition
+	 * @return a new transformer
+	 * @param <U> see ObservableTransformer
+	 * @param <D> see ObservableTransformer
+	 */
+	public static <U, D> ObservableTransformer<U, D> wrapTransformerErrors(
+			String message, ObservableTransformer<U, D> transformer) {
+		return new ErrorWrapObservableTransformer<>(message, transformer);
+	}
+
+	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+	private static final class ErrorWrapObservableTransformer<U, D> implements ObservableTransformer<U, D> {
+		private final String message;
+		private final ObservableTransformer<U, D> transformer;
+		private boolean upstreamError = false;
+
+		@Override
+		public @NonNull ObservableSource<D> apply(@NonNull Observable<U> upstream) {
+			return upstream.doOnError(e -> upstreamError = true)
+					.compose(transformer)
+					.onErrorResumeNext(e -> {
+						if (!upstreamError) {
+							return Observable.error(new RuntimeException(message, e));
+						}
+						return Observable.error(e);
+					});
+		}
 	}
 }
