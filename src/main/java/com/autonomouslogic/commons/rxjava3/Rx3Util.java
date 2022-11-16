@@ -114,8 +114,8 @@ public class Rx3Util {
 		private boolean upstreamError = false;
 
 		@Override
-		public @NonNull ObservableSource<D> apply(@NonNull Observable<U> U) {
-			return U.doOnError(e -> upstreamError = true).compose(transformer).onErrorResumeNext(e -> {
+		public @NonNull ObservableSource<D> apply(@NonNull Observable<U> upstream) {
+			return upstream.doOnError(e -> upstreamError = true).compose(transformer).onErrorResumeNext(e -> {
 				if (!upstreamError) {
 					return Observable.error(new RuntimeException(message, e));
 				}
