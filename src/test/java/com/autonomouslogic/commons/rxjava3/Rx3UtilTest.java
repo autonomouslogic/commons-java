@@ -1,9 +1,13 @@
 package com.autonomouslogic.commons.rxjava3;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.ObservableTransformer;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -65,5 +69,44 @@ class Rx3UtilTest {
 		var completable = Rx3Util.toCompletable(future);
 		var ex = assertThrows(RuntimeException.class, completable::blockingAwait);
 		assertEquals("java.lang.RuntimeException: test error", ex.getMessage());
+	}
+
+	@Test
+	void shouldWrapTransformerErrors() {
+		var observable = Observable.just("result")
+				.observeOn(Schedulers.computation())
+				.compose(Rx3Util.wrapTransformerErrors(
+						"wrapped error", upstream -> Observable.error(new RuntimeException("inner error"))));
+		var ex = assertThrows(RuntimeException.class, observable::blockingFirst);
+		ex.printStackTrace();
+		assertEquals("wrapped error", ex.getMessage());
+		assertEquals("inner error", ex.getCause().getMessage());
+	}
+
+	@Test
+	void shouldNotAffectErrorsBeforeWrappingTransformer() {
+		Observable<String> observable = Observable.just("result")
+				.observeOn(Schedulers.computation())
+				.compose((ObservableTransformer<String, String>)
+						upstream -> Observable.error(new RuntimeException("before error")))
+				.observeOn(Schedulers.computation())
+				.compose(Rx3Util.wrapTransformerErrors("wrapped error", upstream -> upstream));
+		var ex = assertThrows(RuntimeException.class, observable::blockingFirst);
+		ex.printStackTrace();
+		assertEquals("before error", ex.getMessage());
+		assertNull(ex.getCause());
+	}
+
+	@Test
+	void shouldNotAffectErrorsAfterWrappingTransformer() {
+		Observable<String> observable = Observable.just("result")
+				.observeOn(Schedulers.computation())
+				.compose(Rx3Util.wrapTransformerErrors("wrapped error", upstream -> upstream))
+				.observeOn(Schedulers.computation())
+				.compose(upstream -> Observable.error(new RuntimeException("after error")));
+		var ex = assertThrows(RuntimeException.class, observable::blockingFirst);
+		ex.printStackTrace();
+		assertEquals("after error", ex.getMessage());
+		assertNull(ex.getCause());
 	}
 }
