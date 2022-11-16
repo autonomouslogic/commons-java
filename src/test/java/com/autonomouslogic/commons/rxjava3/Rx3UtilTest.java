@@ -109,4 +109,13 @@ class Rx3UtilTest {
 		assertEquals("after error", ex.getMessage());
 		assertNull(ex.getCause());
 	}
+
+	@Test
+	void shouldNotBlockResultsWhenWrappingTransformer() {
+		Observable<String> observable = Observable.just("result")
+				.observeOn(Schedulers.computation())
+				.compose(Rx3Util.wrapTransformerErrors("wrapped error", upstream -> upstream));
+		var result = observable.blockingFirst();
+		assertEquals("result", result);
+	}
 }
