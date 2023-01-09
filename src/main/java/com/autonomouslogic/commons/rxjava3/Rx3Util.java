@@ -1,10 +1,14 @@
 package com.autonomouslogic.commons.rxjava3;
 
 import com.autonomouslogic.commons.rxjava3.internal.ErrorWrapObservableTransformer;
+import com.autonomouslogic.commons.rxjava3.internal.OrderedMerger;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.core.Single;
+import org.reactivestreams.Publisher;
+
+import java.util.Comparator;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 
@@ -101,5 +105,9 @@ public class Rx3Util {
 	public static <U, D> ObservableTransformer<U, D> wrapTransformerErrors(
 			String message, ObservableTransformer<U, D> transformer) {
 		return new ErrorWrapObservableTransformer<>(message, transformer);
+	}
+
+	public static <T> Publisher<T> orderedMerge(Comparator<T> comparator, Publisher<T>... sources) {
+		return new OrderedMerger<>(comparator, sources).createPublisher();
 	}
 }
