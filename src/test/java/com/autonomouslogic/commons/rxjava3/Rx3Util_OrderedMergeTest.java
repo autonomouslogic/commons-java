@@ -11,7 +11,7 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class Rx3Util_OrderedMergeTest {
+class Rx3Util_OrderedMergeTest {
 	TestSubscriber<Integer> testSubscriber;
 
 	@BeforeEach
