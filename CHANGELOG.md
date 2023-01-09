@@ -1,5 +1,17 @@
 Commons Java Changelog
 
+## [1.4.0](https://github.com/autonomouslogic/commons-java/compare/1.3.1...1.4.0) (2023-01-09)
+
+
+### Features
+
+* Ordered merge RxUtil ([#19](https://github.com/autonomouslogic/commons-java/issues/19)) ([0c12745](https://github.com/autonomouslogic/commons-java/commit/0c1274558bbe199a98ff8b185cde9e83321857b2))
+
+
+### Miscellaneous Chores
+
+* **deps:** update plugin org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin to v1 ([#18](https://github.com/autonomouslogic/commons-java/issues/18)) ([499b0a9](https://github.com/autonomouslogic/commons-java/commit/499b0a9e71e54071f54c38fe12d9bc86fac9e57f))
+
 ## [1.3.1](https://github.com/autonomouslogic/commons-java/compare/1.3.0...1.3.1) (2023-01-02)
 
 
