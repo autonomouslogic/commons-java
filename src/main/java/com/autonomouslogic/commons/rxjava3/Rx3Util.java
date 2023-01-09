@@ -6,11 +6,10 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.core.Single;
-import org.reactivestreams.Publisher;
-
 import java.util.Comparator;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
+import org.reactivestreams.Publisher;
 
 /**
  * Various helper methods for working with RxJava 3.

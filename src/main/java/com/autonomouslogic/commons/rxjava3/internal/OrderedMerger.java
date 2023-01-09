@@ -3,19 +3,12 @@ package com.autonomouslogic.commons.rxjava3.internal;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Emitter;
 import io.reactivex.rxjava3.core.Flowable;
-
+import io.reactivex.rxjava3.functions.BiFunction;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
-
-import io.reactivex.rxjava3.core.FlowableTransformer;
-import io.reactivex.rxjava3.functions.BiFunction;
-import io.reactivex.rxjava3.functions.Supplier;
-import io.reactivex.rxjava3.internal.operators.flowable.BlockingFlowableIterable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -32,6 +25,7 @@ import org.reactivestreams.Publisher;
 public class OrderedMerger<T> {
 	@NonNull
 	private final Comparator<T> comparator;
+
 	@NonNull
 	private final Publisher<T>[] sources;
 
@@ -40,15 +34,14 @@ public class OrderedMerger<T> {
 			return Flowable.empty();
 		}
 		return Flowable.generate(
-				() -> new MergeState<>(comparator, sources),
-				(BiFunction<MergeState<T>, Emitter<T>, MergeState<T>>) (state, emitter) -> {
-					state.next(emitter);
-					return state;
-				},
-			mergeState -> mergeState.dispose()
-		)
-			.subscribeOn(Schedulers.io())
-			.observeOn(Schedulers.computation());
+						() -> new MergeState<>(comparator, sources),
+						(BiFunction<MergeState<T>, Emitter<T>, MergeState<T>>) (state, emitter) -> {
+							state.next(emitter);
+							return state;
+						},
+						mergeState -> mergeState.dispose())
+				.subscribeOn(Schedulers.io())
+				.observeOn(Schedulers.computation());
 	}
 
 	private static class MergeState<P> {
@@ -67,7 +60,8 @@ public class OrderedMerger<T> {
 			entries = new ArrayList<>(n);
 			current = new Object[n];
 			for (int i = 0; i < n; i++) {
-				iterators[i] = Flowable.fromPublisher(sources[i]).blockingIterable().iterator();
+				iterators[i] =
+						Flowable.fromPublisher(sources[i]).blockingIterable().iterator();
 			}
 			entryComparator = Comparator.comparing(entry -> (P) entry.getObj(), comparator);
 			fill();
@@ -122,6 +116,7 @@ public class OrderedMerger<T> {
 	private static class Entry {
 		@EqualsAndHashCode.Include
 		int index;
+
 		Object obj;
 	}
 }
