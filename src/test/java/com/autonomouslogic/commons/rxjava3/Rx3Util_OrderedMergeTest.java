@@ -1,5 +1,7 @@
 package com.autonomouslogic.commons.rxjava3;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
 import java.util.Comparator;
@@ -74,5 +76,21 @@ public class Rx3Util_OrderedMergeTest {
 						Flowable.just(1))
 				.subscribe(testSubscriber);
 		testSubscriber.await().assertError(e).assertNotComplete();
+	}
+
+	@Test
+	@SneakyThrows
+	void shouldStopEarly() {
+		var inspector1 = new TestSubscriber<Integer>();
+		var inspector2 = new TestSubscriber<Integer>();
+		Flowable.fromPublisher(Rx3Util.orderedMerge(
+						Comparator.naturalOrder(),
+						Flowable.range(0, 1000).doOnNext(inspector1::onNext),
+						Flowable.range(0, 1000).doOnNext(inspector2::onNext)))
+				.take(100)
+				.subscribe(testSubscriber);
+		testSubscriber.await().assertValueCount(100).assertComplete();
+		assertTrue(inspector1.values().size() < 200, "" + inspector1.values().size());
+		assertTrue(inspector2.values().size() < 200, "" + inspector2.values().size());
 	}
 }

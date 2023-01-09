@@ -101,8 +101,7 @@ public class OrderedMerger<T> {
 			var i = nextIndex();
 			if (i == -1) {
 				emitter.onComplete();
-			}
-			else {
+			} else {
 				emitter.onNext(remove(i));
 			}
 		}
