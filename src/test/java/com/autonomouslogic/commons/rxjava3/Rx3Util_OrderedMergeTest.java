@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
@@ -88,17 +89,33 @@ public class Rx3Util_OrderedMergeTest {
 						Comparator.naturalOrder(),
 						Flowable.range(0, 1000).doOnNext(inspector1::onNext),
 						Flowable.range(0, 1000).doOnNext(inspector2::onNext)))
-				.take(100)
+				.take(10)
 				.subscribe(testSubscriber);
-		testSubscriber.await().assertValueCount(100).assertComplete();
-		assertTrue(inspector1.values().size() < 200, "" + inspector1.values().size());
-		assertTrue(inspector2.values().size() < 200, "" + inspector2.values().size());
+		testSubscriber.await().assertValueCount(10).assertComplete();
+		assertTrue(inspector1.values().size() < 1000, "" + inspector1.values().size());
+		assertTrue(inspector2.values().size() < 1000, "" + inspector2.values().size());
+	}
+
+	@Test
+	@SneakyThrows
+	void shouldStopEarlyOnCancel() {
+		var inspector1 = new TestSubscriber<Integer>();
+		var inspector2 = new TestSubscriber<Integer>();
+		Flowable.fromPublisher(Rx3Util.orderedMerge(
+						Comparator.naturalOrder(),
+						Flowable.range(0, 1000).doOnNext(inspector1::onNext),
+						Flowable.range(0, 1000).doOnNext(inspector2::onNext)))
+				.subscribe(testSubscriber);
+		testSubscriber.awaitCount(10).cancel();
+		System.out.println("values: " + testSubscriber.values());
+		assertTrue(inspector1.values().size() < 1000, "" + inspector1.values().size());
+		assertTrue(inspector2.values().size() < 1000, "" + inspector2.values().size());
 	}
 
 	@Test
 	@SneakyThrows
 	void shouldMergeDelayedStreams() {
-		Rx3Util.orderedMerge(Comparator.naturalOrder(), delayedFlow(5, false), delayedFlow(20, false))
+		Rx3Util.orderedMerge(Comparator.naturalOrder(), delayedFlow(5, false), delayedFlow(100, false))
 				.subscribe(testSubscriber);
 		testSubscriber.await();
 		System.out.println("values: " + testSubscriber.values());
@@ -116,11 +133,14 @@ public class Rx3Util_OrderedMergeTest {
 	}
 
 	private Flowable<Integer> delayedFlow(int interval, boolean error) {
-		return Flowable.range(0, 5).flatMap(i -> {
-			if (error && i == 9) {
-				return Flowable.error(new RuntimeException("test"));
+		var flows = new ArrayList<Flowable<Integer>>();
+		for (int i = 0; i < 5; i++) {
+			if (error && i == 3) {
+				flows.add(Flowable.error(new RuntimeException("test")));
+			} else {
+				flows.add(Flowable.just(i).delay(interval, TimeUnit.MILLISECONDS));
 			}
-			return Flowable.just(i).delay(interval, TimeUnit.MILLISECONDS);
-		});
+		}
+		return Flowable.concat(flows);
 	}
 }

@@ -106,6 +106,14 @@ public class Rx3Util {
 		return new ErrorWrapObservableTransformer<>(message, transformer);
 	}
 
+	/**
+	 * Merges a number of sources together always picking the next item from the source which compares the lowest.
+	 * In order to merge sources in a completely ordered way, it is assumed the sources are already themselves sorted.
+	 * @param comparator
+	 * @param sources
+	 * @return
+	 * @param <T>
+	 */
 	public static <T> Publisher<T> orderedMerge(Comparator<T> comparator, Publisher<T>... sources) {
 		return new OrderedMerger<>(comparator, sources).createPublisher();
 	}
