@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
 import java.util.Comparator;
+import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,5 +93,34 @@ public class Rx3Util_OrderedMergeTest {
 		testSubscriber.await().assertValueCount(100).assertComplete();
 		assertTrue(inspector1.values().size() < 200, "" + inspector1.values().size());
 		assertTrue(inspector2.values().size() < 200, "" + inspector2.values().size());
+	}
+
+	@Test
+	@SneakyThrows
+	void shouldMergeDelayedStreams() {
+		Rx3Util.orderedMerge(Comparator.naturalOrder(), delayedFlow(5, false), delayedFlow(20, false))
+				.subscribe(testSubscriber);
+		testSubscriber.await();
+		System.out.println("values: " + testSubscriber.values());
+		testSubscriber.assertValues(0, 0, 1, 1, 2, 2, 3, 3, 4, 4).assertComplete();
+	}
+
+	@Test
+	@SneakyThrows
+	void shouldMergeDelayedStreamsWithErrors() {
+		Rx3Util.orderedMerge(Comparator.naturalOrder(), delayedFlow(5, false), delayedFlow(5, true), Flowable.just(1))
+				.subscribe(testSubscriber);
+		testSubscriber.await();
+		System.out.println("values: " + testSubscriber.values());
+		testSubscriber.assertError(RuntimeException.class).assertNotComplete();
+	}
+
+	private Flowable<Integer> delayedFlow(int interval, boolean error) {
+		return Flowable.range(0, 5).flatMap(i -> {
+			if (error && i == 9) {
+				return Flowable.error(new RuntimeException("test"));
+			}
+			return Flowable.just(i).delay(interval, TimeUnit.MILLISECONDS);
+		});
 	}
 }
