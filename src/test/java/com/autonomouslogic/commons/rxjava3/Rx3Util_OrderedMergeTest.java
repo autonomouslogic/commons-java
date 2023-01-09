@@ -54,4 +54,25 @@ public class Rx3Util_OrderedMergeTest {
 				.subscribe(testSubscriber);
 		testSubscriber.await().assertComplete().assertResult(1, 2).assertNoErrors();
 	}
+
+	@Test
+	@SneakyThrows
+	void shouldPropagateImmediateErrors() {
+		var e = new RuntimeException("test");
+		Rx3Util.orderedMerge(Comparator.naturalOrder(), Flowable.just(1), Flowable.error(e))
+				.subscribe(testSubscriber);
+		testSubscriber.await().assertComplete().assertError(e)
+			.assertResult(1);
+	}
+
+	@Test
+	@SneakyThrows
+	void shouldPropagateLaterErrors() {
+		var e = new RuntimeException("test");
+		Rx3Util.orderedMerge(Comparator.naturalOrder(), Flowable.concat(Flowable.just(2), Flowable.error(e)),
+				Flowable.just(1))
+				.subscribe(testSubscriber);
+		testSubscriber.await().assertComplete().assertError(e)
+			.assertResult(1);
+	}
 }

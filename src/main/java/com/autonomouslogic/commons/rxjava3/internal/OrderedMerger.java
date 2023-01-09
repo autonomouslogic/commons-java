@@ -4,16 +4,22 @@ import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Emitter;
 import io.reactivex.rxjava3.core.Flowable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
+import java.util.function.Function;
 
 import io.reactivex.rxjava3.core.FlowableTransformer;
 import io.reactivex.rxjava3.functions.BiFunction;
 import io.reactivex.rxjava3.functions.Supplier;
 import io.reactivex.rxjava3.internal.operators.flowable.BlockingFlowableIterable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import lombok.Value;
 import org.reactivestreams.Publisher;
 
 /**
@@ -50,62 +56,72 @@ public class OrderedMerger<T> {
 		private final Comparator<P> comparator;
 		private final Iterator<P>[] iterators;
 		private final Object[] current;
+		private final List<Entry> entries;
+		private final Comparator<Entry> entryComparator;
 
+		@SuppressWarnings("unchecked")
 		MergeState(Comparator<P> comparator, Publisher<P>[] sources) {
 			this.comparator = comparator;
 			n = sources.length;
 			iterators = new Iterator[n];
+			entries = new ArrayList<>(n);
 			current = new Object[n];
 			for (int i = 0; i < n; i++) {
 				iterators[i] = Flowable.fromPublisher(sources[i]).blockingIterable().iterator();
 			}
+			entryComparator = Comparator.comparing(entry -> (P) entry.getObj(), comparator);
 			fill();
 		}
 
 		private void fill() {
+			var changed = false;
 			for (int i = 0; i < n; i++) {
 				if (current[i] == null && iterators[i].hasNext()) {
 					current[i] = iterators[i].next();
+					entries.add(new Entry(i, current[i]));
+					changed = true;
 				}
+			}
+			if (changed) {
+				entries.sort(entryComparator);
 			}
 		}
 
 		@SuppressWarnings("unchecked")
+		private P remove(int i) {
+			var obj = current[i];
+			current[i] = null;
+			entries.remove(new Entry(i, null));
+			return (P) obj;
+		}
+
 		private int nextIndex() {
 			fill();
-			var j = -1;
-			var c = 0;
-			for (int i = 1; i < n; i++) {
-				if (current[c] == null) {
-					c = i;
-				}
-				else if (current[i] != null) {
-					if (comparator.compare((P) current[c], (P) current[i]) < 0) {
-						j = c;
-					}
-					else {
-						j = i;
-					}
-				}
-				else {
-					j = c;
-				}
+			if (entries.isEmpty()) {
+				return -1;
 			}
-			return j;
+			return entries.get(0).getIndex();
 		}
 
-		@SuppressWarnings("unchecked")
 		protected void next(Emitter<P> emitter) {
 			var i = nextIndex();
 			if (i == -1) {
 				emitter.onComplete();
 			}
-			emitter.onNext((P) current[i]);
-			current[i] = null;
+			emitter.onNext(remove(i));
 		}
 
 		protected void dispose() {
 			// @todo not implemented
 		}
+	}
+
+	@Value
+	@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+	@ToString
+	private static class Entry {
+		@EqualsAndHashCode.Include
+		int index;
+		Object obj;
 	}
 }
