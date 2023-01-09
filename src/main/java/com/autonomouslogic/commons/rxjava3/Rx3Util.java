@@ -1,16 +1,15 @@
 package com.autonomouslogic.commons.rxjava3;
 
-import io.reactivex.rxjava3.annotations.NonNull;
+import com.autonomouslogic.commons.rxjava3.internal.ErrorWrapObservableTransformer;
+import com.autonomouslogic.commons.rxjava3.internal.OrderedMerger;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Maybe;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.core.Single;
+import java.util.Comparator;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
+import org.reactivestreams.Publisher;
 
 /**
  * Various helper methods for working with RxJava 3.
@@ -107,22 +106,15 @@ public class Rx3Util {
 		return new ErrorWrapObservableTransformer<>(message, transformer);
 	}
 
-	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-	private static final class ErrorWrapObservableTransformer<U, D> implements ObservableTransformer<U, D> {
-		private final String message;
-		private final ObservableTransformer<U, D> transformer;
-		private boolean upstreamError = false;
-
-		@Override
-		public @NonNull ObservableSource<D> apply(@NonNull Observable<U> upstream) {
-			return upstream.doOnError(e -> upstreamError = true)
-					.compose(transformer)
-					.onErrorResumeNext(e -> {
-						if (!upstreamError) {
-							return Observable.error(new RuntimeException(message, e));
-						}
-						return Observable.error(e);
-					});
-		}
+	/**
+	 * Merges a number of sources together always picking the next item from the source which compares the lowest.
+	 * In order to merge sources in a completely ordered way, it is assumed the sources are already themselves sorted.
+	 * @param comparator
+	 * @param sources
+	 * @return the merged Publisher
+	 * @param <T> the type of the Publisher to merge
+	 */
+	public static <T> Publisher<T> orderedMerge(Comparator<T> comparator, Publisher<T>... sources) {
+		return new OrderedMerger<>(comparator, sources).createPublisher();
 	}
 }
