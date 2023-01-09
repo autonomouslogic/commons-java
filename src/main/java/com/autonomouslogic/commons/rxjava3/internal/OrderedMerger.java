@@ -102,7 +102,9 @@ public class OrderedMerger<T> {
 			if (i == -1) {
 				emitter.onComplete();
 			}
-			emitter.onNext(remove(i));
+			else {
+				emitter.onNext(remove(i));
+			}
 		}
 
 		protected void dispose() {
