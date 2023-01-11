@@ -2,11 +2,16 @@ package com.autonomouslogic.commons.rxjava3;
 
 import com.autonomouslogic.commons.rxjava3.internal.ErrorWrapObservableTransformer;
 import com.autonomouslogic.commons.rxjava3.internal.OrderedMerger;
+import com.autonomouslogic.commons.rxjava3.internal.ZipAll;
+import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.functions.Function;
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 import org.reactivestreams.Publisher;
@@ -116,5 +121,23 @@ public class Rx3Util {
 	 */
 	public static <T> Publisher<T> orderedMerge(Comparator<T> comparator, Publisher<T>... sources) {
 		return new OrderedMerger<>(comparator, sources).createPublisher();
+	}
+
+	/**
+	 * Like {@link Flowable#zipArray(Function, boolean, int, Publisher[])}, but keeps going until all the sources
+	 * have ended. It does this by wrapping all the values in {@link Optional}s and replacing the ended sources with empty
+	 * ones.
+	 */
+	public static <@NonNull T, @NonNull R> Flowable<R> zipAllFlowable(
+			@NonNull Function<? super Object[], ? extends R> zipper,
+			boolean delayError,
+			int bufferSize,
+			@NonNull Publisher<? extends T>... sources) {
+		return new ZipAll<T, R>(zipper, delayError, bufferSize, sources).createFlowable();
+	}
+
+	public static <@NonNull T, @NonNull R> Flowable<R> zipAllFlowable(
+			@NonNull Function<? super Object[], ? extends R> zipper, @NonNull Publisher<? extends T>... sources) {
+		return zipAllFlowable(zipper, false, Flowable.bufferSize(), sources);
 	}
 }
