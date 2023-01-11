@@ -11,6 +11,18 @@ import org.reactivestreams.Publisher;
 @RequiredArgsConstructor
 @SuppressWarnings("unchecked")
 public class ZipAll<T, R> {
+	private static final Predicate<?> PREDICATE = in -> {
+		var objs = (Object[]) in;
+		for (var obj : objs) {
+			if (((Optional) obj).isPresent()) {
+				return true;
+			}
+		}
+		return false;
+	};
+
+	private static final Function<Object[], Object[]> IDENTITY = v -> v;
+
 	@NonNull
 	private final Function<? super Object[], ? extends R> zipper;
 
@@ -21,8 +33,8 @@ public class ZipAll<T, R> {
 	private final Publisher[] sources;
 
 	public Flowable<R> createFlowable() {
-		return Flowable.zipArray(v -> v, delayError, bufferSize, padSources())
-				.takeWhile(predicate())
+		return Flowable.zipArray(IDENTITY, delayError, bufferSize, padSources())
+				.takeWhile(PREDICATE)
 				.map(zipper);
 	}
 
@@ -40,17 +52,5 @@ public class ZipAll<T, R> {
 
 	private Publisher<Optional<?>> pad() {
 		return Flowable.generate(emitter -> emitter.onNext(Optional.empty()));
-	}
-
-	private Predicate<?> predicate() {
-		return in -> {
-			var objs = (Object[]) in;
-			for (var obj : objs) {
-				if (((Optional) obj).isPresent()) {
-					return true;
-				}
-			}
-			return false;
-		};
 	}
 }
