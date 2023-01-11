@@ -21,17 +21,21 @@ public class ZipAll<T, R> {
 	private final Publisher[] sources;
 
 	public Flowable<R> createFlowable() {
-		return Flowable.zipArray(v -> v, delayError, bufferSize, padSources(sources))
+		return Flowable.zipArray(v -> v, delayError, bufferSize, padSources())
 				.takeWhile(predicate())
 				.map(zipper);
 	}
 
-	private Publisher[] padSources(Publisher[] sources) {
+	private Publisher[] padSources() {
 		var padded = new Publisher[sources.length];
 		for (int i = 0; i < sources.length; i++) {
-			padded[i] = Flowable.concat(Flowable.fromPublisher(sources[i]).map(Optional::of), pad());
+			padded[i] = Flowable.concat(map(sources[i]), pad());
 		}
 		return padded;
+	}
+
+	private Publisher<Optional<?>> map(Publisher<?> source) {
+		return Flowable.fromPublisher(source).map(Optional::of);
 	}
 
 	private Publisher<Optional<?>> pad() {
