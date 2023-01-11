@@ -11,6 +11,7 @@ import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.functions.Function;
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 import org.reactivestreams.Publisher;
@@ -124,7 +125,7 @@ public class Rx3Util {
 
 	/**
 	 * Like {@link Flowable#zipArray(Function, boolean, int, Publisher[])}, but keeps going until all the sources
-	 * have ended. It does this by wrapping all the values in {@Optional}s and replacing the ended sources with empty
+	 * have ended. It does this by wrapping all the values in {@link Optional}s and replacing the ended sources with empty
 	 * ones.
 	 */
 	public static <@NonNull T, @NonNull R> Flowable<R> zipAllFlowable(
