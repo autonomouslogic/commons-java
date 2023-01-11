@@ -5,12 +5,16 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subscribers.TestSubscriber;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
 class Rx3UtilTest {
@@ -117,5 +121,38 @@ class Rx3UtilTest {
 				.compose(Rx3Util.wrapTransformerErrors("wrapped error", upstream -> upstream));
 		var result = observable.blockingFirst();
 		assertEquals("result", result);
+	}
+
+	@Test
+	@SneakyThrows
+	void shouldZipAll() {
+		var sub = new TestSubscriber<Object[]>();
+		Rx3Util.zipAllFlowable(v -> v, Flowable.just(1, 2), Flowable.just(3, 4, 5), Flowable.just(6, 7, 8, 9))
+				.subscribe(sub);
+		var values = sub.await()
+				.assertNoErrors()
+				.assertComplete()
+				.assertValueCount(4)
+				.values();
+		// First row.
+		assertEquals(Optional.of(1), values.get(0)[0]);
+		assertEquals(Optional.of(3), values.get(0)[1]);
+		assertEquals(Optional.of(6), values.get(0)[2]);
+		assertEquals(3, values.get(0).length);
+		// Second row.
+		assertEquals(Optional.of(2), values.get(1)[0]);
+		assertEquals(Optional.of(4), values.get(1)[1]);
+		assertEquals(Optional.of(7), values.get(1)[2]);
+		assertEquals(3, values.get(0).length);
+		// Third row.
+		assertEquals(Optional.empty(), values.get(2)[0]);
+		assertEquals(Optional.of(5), values.get(2)[1]);
+		assertEquals(Optional.of(8), values.get(2)[2]);
+		assertEquals(3, values.get(0).length);
+		// Fourth row.
+		assertEquals(Optional.empty(), values.get(3)[0]);
+		assertEquals(Optional.empty(), values.get(3)[1]);
+		assertEquals(Optional.of(9), values.get(3)[2]);
+		assertEquals(3, values.get(0).length);
 	}
 }
