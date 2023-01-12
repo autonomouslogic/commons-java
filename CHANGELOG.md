@@ -1,5 +1,12 @@
 Commons Java Changelog
 
+## [1.5.0](https://github.com/autonomouslogic/commons-java/compare/1.4.0...1.5.0) (2023-01-12)
+
+
+### Features
+
+* Added ZipAll for unequal-length zips. ([#20](https://github.com/autonomouslogic/commons-java/issues/20)) ([bfb1d6b](https://github.com/autonomouslogic/commons-java/commit/bfb1d6b0ec71733cc4f32f5bc318f07a86974f89))
+
 ## [1.4.0](https://github.com/autonomouslogic/commons-java/compare/1.3.1...1.4.0) (2023-01-09)
 
 
