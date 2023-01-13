@@ -1,5 +1,6 @@
 package com.autonomouslogic.commons.rxjava3;
 
+import com.autonomouslogic.commons.rxjava3.internal.CheckOrder;
 import com.autonomouslogic.commons.rxjava3.internal.ErrorWrapObservableTransformer;
 import com.autonomouslogic.commons.rxjava3.internal.OrderedMerger;
 import com.autonomouslogic.commons.rxjava3.internal.ZipAll;
@@ -139,5 +140,13 @@ public class Rx3Util {
 	public static <@NonNull T, @NonNull R> Flowable<R> zipAllFlowable(
 			@NonNull Function<? super Object[], ? extends R> zipper, @NonNull Publisher<? extends T>... sources) {
 		return zipAllFlowable(zipper, false, Flowable.bufferSize(), sources);
+	}
+
+	/**
+	 * Creates a transformer which will error if the stream isn't strictly ordered.
+	 * @param comparator the comparator
+	 */
+	public static <@NonNull T> CheckOrder<T> checkOrder(Comparator<T> comparator) {
+		return new CheckOrder<T>(comparator);
 	}
 }

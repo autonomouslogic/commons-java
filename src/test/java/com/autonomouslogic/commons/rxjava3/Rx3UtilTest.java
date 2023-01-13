@@ -10,6 +10,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -154,5 +155,25 @@ class Rx3UtilTest {
 		assertEquals(Optional.empty(), values.get(3)[1]);
 		assertEquals(Optional.of(9), values.get(3)[2]);
 		assertEquals(3, values.get(0).length);
+	}
+
+	@Test
+	void shouldPassCheckOrderOnOrderedStuff() {
+		var ints = List.of(1, 2, 3, 3, 4, 5, 6);
+		var result = Flowable.fromIterable(ints)
+				.compose(Rx3Util.checkOrder(Integer::compareTo))
+				.toList()
+				.blockingGet();
+		assertEquals(ints, result);
+	}
+
+	@Test
+	void shouldErrorCheckOrderOnUnorderedStuff() {
+		var ints = List.of(1, 2, 3, 5, 4, 5, 6);
+		var result = Flowable.fromIterable(ints)
+				.compose(Rx3Util.checkOrder(Integer::compareTo))
+				.toList();
+		var e = assertThrows(RuntimeException.class, () -> result.blockingGet());
+		assertEquals("Stream isn't ordered - last: 5, current: 4", e.getMessage());
 	}
 }
