@@ -10,6 +10,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -154,5 +155,17 @@ class Rx3UtilTest {
 		assertEquals(Optional.empty(), values.get(3)[1]);
 		assertEquals(Optional.of(9), values.get(3)[2]);
 		assertEquals(3, values.get(0).length);
+	}
+
+	@Test
+	@SneakyThrows
+	void shouldWindowSort() {
+		var sub = new TestSubscriber<Integer>();
+		Flowable.fromIterable(List.of(4, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 3, 2, 1))
+				.compose(Rx3Util.windowSort(Integer::compareTo, 5))
+				.subscribe(sub);
+		sub.await().assertComplete().assertNoErrors();
+		System.out.println(sub.values());
+		sub.assertValues(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 3, 4, 4);
 	}
 }

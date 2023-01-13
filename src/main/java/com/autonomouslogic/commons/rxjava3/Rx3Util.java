@@ -140,4 +140,13 @@ public class Rx3Util {
 			@NonNull Function<? super Object[], ? extends R> zipper, @NonNull Publisher<? extends T>... sources) {
 		return zipAllFlowable(zipper, false, Flowable.bufferSize(), sources);
 	}
+
+	/**
+	 * Sorts a stream within a sliding window.
+	 * @param comparator the comparator
+	 * @param minWindowSize the minimum window size. The actual sorting window will be larger.
+	 */
+	public static <@NonNull T> WindowSort<T> windowSort(Comparator<T> comparator, int minWindowSize) {
+		return new WindowSort<>(comparator, minWindowSize);
+	}
 }
