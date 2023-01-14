@@ -5,7 +5,6 @@ import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.FlowableTransformer;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedList;
 import org.reactivestreams.Publisher;
 
 public class WindowSort<T> implements FlowableTransformer<T, T> {
@@ -25,7 +24,8 @@ public class WindowSort<T> implements FlowableTransformer<T, T> {
 	@Override
 	public @NonNull Publisher<T> apply(@NonNull Flowable<T> upstream) {
 		return Flowable.defer(() -> {
-			final var window = new LinkedList<T>();
+			final var window = new ArrayList<T>(minWindowSize * 2);
+			final var tmp = new ArrayList<T>(minWindowSize);
 			var sorted = upstream.buffer(minWindowSize)
 					.flatMap(
 							buffer -> {
@@ -35,12 +35,12 @@ public class WindowSort<T> implements FlowableTransformer<T, T> {
 								if (len <= 0) {
 									return Flowable.empty();
 								}
-								var list = new ArrayList<T>(len);
-								for (int i = 0; i < len; i++) {
-									list.add(window.get(0));
-									window.remove(0);
-								}
-								return Flowable.fromIterable(list);
+								var result = new ArrayList<>(window.subList(0, len));
+								tmp.addAll(window.subList(len, window.size()));
+								window.clear();
+								window.addAll(tmp);
+								tmp.clear();
+								return Flowable.fromIterable(result);
 							},
 							1);
 			var remaining = Flowable.defer(() -> Flowable.fromIterable(window));
