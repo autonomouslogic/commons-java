@@ -10,6 +10,8 @@ import org.reactivestreams.Publisher;
 
 @RequiredArgsConstructor
 public class CheckOrder<T> implements FlowableTransformer<T, T> {
+	private static final int MAX_CONCURRENCY = 1;
+
 	@lombok.NonNull
 	private final Comparator<T> comparator;
 
@@ -25,6 +27,6 @@ public class CheckOrder<T> implements FlowableTransformer<T, T> {
 					last.set(current);
 					return Flowable.just(current);
 				},
-				1);
+				MAX_CONCURRENCY);
 	}
 }
