@@ -168,4 +168,24 @@ class Rx3UtilTest {
 		System.out.println(sub.values());
 		sub.assertValues(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 3, 4, 4);
 	}
+
+	@Test
+	void shouldPassCheckOrderOnOrderedStuff() {
+		var ints = List.of(1, 2, 3, 3, 4, 5, 6);
+		var result = Flowable.fromIterable(ints)
+				.compose(Rx3Util.checkOrder(Integer::compareTo))
+				.toList()
+				.blockingGet();
+		assertEquals(ints, result);
+	}
+
+	@Test
+	void shouldErrorCheckOrderOnUnorderedStuff() {
+		var ints = List.of(1, 2, 3, 5, 4, 5, 6);
+		var result = Flowable.fromIterable(ints)
+				.compose(Rx3Util.checkOrder(Integer::compareTo))
+				.toList();
+		var e = assertThrows(RuntimeException.class, () -> result.blockingGet());
+		assertEquals("Stream isn't ordered - last: 5, current: 4", e.getMessage());
+	}
 }

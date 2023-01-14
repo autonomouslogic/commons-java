@@ -1,5 +1,6 @@
 package com.autonomouslogic.commons.rxjava3;
 
+import com.autonomouslogic.commons.rxjava3.internal.CheckOrder;
 import com.autonomouslogic.commons.rxjava3.internal.ErrorWrapObservableTransformer;
 import com.autonomouslogic.commons.rxjava3.internal.OrderedMerger;
 import com.autonomouslogic.commons.rxjava3.internal.ZipAll;
@@ -148,5 +149,13 @@ public class Rx3Util {
 	 */
 	public static <@NonNull T> WindowSort<T> windowSort(Comparator<T> comparator, int minWindowSize) {
 		return new WindowSort<>(comparator, minWindowSize);
+	}
+
+	/**
+	 * Creates a transformer which will error if the stream isn't strictly ordered.
+	 * @param comparator the comparator
+	 */
+	public static <@NonNull T> CheckOrder<T> checkOrder(Comparator<T> comparator) {
+		return new CheckOrder<T>(comparator);
 	}
 }
