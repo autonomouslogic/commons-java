@@ -143,6 +143,15 @@ public class Rx3Util {
 	}
 
 	/**
+	 * Sorts a stream within a sliding window.
+	 * @param comparator the comparator
+	 * @param minWindowSize the minimum window size. The actual sorting window will be larger.
+	 */
+	public static <@NonNull T> WindowSort<T> windowSort(Comparator<T> comparator, int minWindowSize) {
+		return new WindowSort<>(comparator, minWindowSize);
+	}
+
+	/**
 	 * Creates a transformer which will error if the stream isn't strictly ordered.
 	 * @param comparator the comparator
 	 */

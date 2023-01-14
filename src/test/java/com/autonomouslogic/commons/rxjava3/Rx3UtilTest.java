@@ -158,6 +158,18 @@ class Rx3UtilTest {
 	}
 
 	@Test
+	@SneakyThrows
+	void shouldWindowSort() {
+		var sub = new TestSubscriber<Integer>();
+		Flowable.fromIterable(List.of(4, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 3, 2, 1))
+				.compose(Rx3Util.windowSort(Integer::compareTo, 5))
+				.subscribe(sub);
+		sub.await().assertComplete().assertNoErrors();
+		System.out.println(sub.values());
+		sub.assertValues(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 3, 3, 4, 4);
+	}
+
+	@Test
 	void shouldPassCheckOrderOnOrderedStuff() {
 		var ints = List.of(1, 2, 3, 3, 4, 5, 6);
 		var result = Flowable.fromIterable(ints)
