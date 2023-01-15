@@ -1,5 +1,13 @@
 Commons Java Changelog
 
+## [1.6.0](https://github.com/autonomouslogic/commons-java/compare/1.5.0...1.6.0) (2023-01-15)
+
+
+### Features
+
+* Rx CheckOrder ([#22](https://github.com/autonomouslogic/commons-java/issues/22)) ([c7d3fdf](https://github.com/autonomouslogic/commons-java/commit/c7d3fdf2d1b9af7c833911cadf82531f9819be07))
+* Rx WindowSort ([#21](https://github.com/autonomouslogic/commons-java/issues/21)) ([7c189fe](https://github.com/autonomouslogic/commons-java/commit/7c189feb38a3baf4a5a435666732041e0bcc036c))
+
 ## [1.5.0](https://github.com/autonomouslogic/commons-java/compare/1.4.0...1.5.0) (2023-01-12)
 
 
