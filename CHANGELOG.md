@@ -1,5 +1,18 @@
 Commons Java Changelog
 
+## [1.6.1](https://github.com/autonomouslogic/commons-java/compare/1.6.0...1.6.1) (2023-02-06)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#24](https://github.com/autonomouslogic/commons-java/issues/24)) ([4a5f7e2](https://github.com/autonomouslogic/commons-java/commit/4a5f7e29e77be565e5e3fa2ffeda412948711a0d))
+* **deps:** update dependency org.mockito:mockito-core to v5 ([#23](https://github.com/autonomouslogic/commons-java/issues/23)) ([bf570a0](https://github.com/autonomouslogic/commons-java/commit/bf570a0d7aa5050ede5fba1382c5c78d01309d87))
+
+
+### Miscellaneous Chores
+
+* **release:** 1.6.1 [skip ci] ([f0c8307](https://github.com/autonomouslogic/commons-java/commit/f0c8307d0cfca3af9a171c2c4cfbd5d6e94e93e1)), closes [#24](https://github.com/autonomouslogic/commons-java/issues/24)
+
 ## [1.6.0](https://github.com/autonomouslogic/commons-java/compare/1.5.0...1.6.0) (2023-01-15)
 
 
