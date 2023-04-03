@@ -1,5 +1,18 @@
 Commons Java Changelog
 
+## [1.6.2](https://github.com/autonomouslogic/commons-java/compare/1.6.1...1.6.2) (2023-04-03)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#28](https://github.com/autonomouslogic/commons-java/issues/28)) ([ea2f516](https://github.com/autonomouslogic/commons-java/commit/ea2f516cf977c795a00c1811bda125be14d038b6))
+
+
+### Miscellaneous Chores
+
+* **deps:** update all non-major dependencies ([#26](https://github.com/autonomouslogic/commons-java/issues/26)) ([5cb44d3](https://github.com/autonomouslogic/commons-java/commit/5cb44d37beb8389bca3c5e450612fcf7e3ceac87))
+* **deps:** update plugin io.freefair.lombok to v8 ([#27](https://github.com/autonomouslogic/commons-java/issues/27)) ([b0fc236](https://github.com/autonomouslogic/commons-java/commit/b0fc236628bf3f05a609a18a0423535c46d1ffa2))
+
 ## [1.6.1](https://github.com/autonomouslogic/commons-java/compare/1.6.0...1.6.1) (2023-02-06)
 
 
