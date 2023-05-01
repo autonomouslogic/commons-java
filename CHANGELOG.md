@@ -1,5 +1,12 @@
 Commons Java Changelog
 
+## [1.6.3](https://github.com/autonomouslogic/commons-java/compare/1.6.2...1.6.3) (2023-05-01)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#29](https://github.com/autonomouslogic/commons-java/issues/29)) ([150bd80](https://github.com/autonomouslogic/commons-java/commit/150bd8048a55b39c64c24308361c314942fbd336))
+
 ## [1.6.2](https://github.com/autonomouslogic/commons-java/compare/1.6.1...1.6.2) (2023-04-03)
 
 
