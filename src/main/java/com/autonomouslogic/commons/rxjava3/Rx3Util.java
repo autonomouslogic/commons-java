@@ -7,14 +7,19 @@ import com.autonomouslogic.commons.rxjava3.internal.ZipAll;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.FlowableTransformer;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.functions.Predicate;
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.reactivestreams.Publisher;
 
 /**
@@ -157,5 +162,30 @@ public class Rx3Util {
 	 */
 	public static <@NonNull T> CheckOrder<T> checkOrder(Comparator<T> comparator) {
 		return new CheckOrder<T>(comparator);
+	}
+
+	public static <T> FlowableTransformer<T, T> retryWithDelayFlowable(int times, Duration delay) {
+		return retryWithDelayFlowable(times, delay, e -> true);
+	}
+
+	public static <T> FlowableTransformer<T, T> retryWithDelayFlowable(
+			int times, Duration delay, Predicate<? super Throwable> predicate) {
+		if (times < 0) {
+			throw new IllegalArgumentException("times >= 0 required but it was " + times);
+		}
+		var delayNs = delay.toNanos();
+		if (delayNs < 0) {
+			throw new IllegalArgumentException("delay must be zero or more");
+		}
+		return upstream -> upstream.retryWhen(e -> {
+			var t = new AtomicInteger();
+			return e.flatMap(err -> {
+				int i = t.incrementAndGet();
+				if (i <= times && predicate.test(err)) {
+					return Flowable.timer(delayNs, TimeUnit.NANOSECONDS);
+				}
+				return Flowable.error(err);
+			});
+		});
 	}
 }

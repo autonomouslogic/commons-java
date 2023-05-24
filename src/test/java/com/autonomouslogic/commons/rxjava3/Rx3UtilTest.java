@@ -10,10 +10,14 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
@@ -187,5 +191,50 @@ class Rx3UtilTest {
 				.toList();
 		var e = assertThrows(RuntimeException.class, () -> result.blockingGet());
 		assertEquals("Stream isn't ordered - last: 5, current: 4", e.getMessage());
+	}
+
+	@Test
+	@SneakyThrows
+	void shouldRetryWithDelay() {
+		var count = new AtomicInteger();
+		var times = new ArrayList<Instant>();
+		var result = Flowable.defer(() -> {
+					times.add(Instant.now());
+					if (count.incrementAndGet() < 3) {
+						return Flowable.error(new RuntimeException("test error"));
+					}
+					return Flowable.just("result");
+				})
+				.subscribeOn(Schedulers.computation())
+				.compose(Rx3Util.retryWithDelayFlowable(2, Duration.ofSeconds(1)))
+				.blockingFirst();
+		assertEquals("result", result);
+		assertEquals(3, count.get());
+		assertEquals(3, times.size());
+		for (int j = 0; j < 2; j++) {
+			assertEquals(1000, Duration.between(times.get(j), times.get(j + 1)).toMillis(), 100);
+		}
+	}
+
+	@Test
+	@SneakyThrows
+	void shouldRetryWithDelayPredicate() {
+		var count = new AtomicInteger();
+		var times = new ArrayList<Instant>();
+		Supplier<?> func = () -> Flowable.defer(() -> {
+					times.add(Instant.now());
+					return Flowable.error(new RuntimeException("test error " + count.getAndIncrement()));
+				})
+				.subscribeOn(Schedulers.computation())
+				.compose(Rx3Util.retryWithDelayFlowable(
+						100, Duration.ofSeconds(1), e -> !e.getMessage().equals("test error 2")))
+				.blockingFirst();
+		var e = assertThrows(RuntimeException.class, func::get);
+		assertEquals("test error 2", e.getMessage());
+		assertEquals(3, count.get());
+		assertEquals(3, times.size());
+		for (int j = 0; j < 2; j++) {
+			assertEquals(1000, Duration.between(times.get(j), times.get(j + 1)).toMillis(), 100);
+		}
 	}
 }
