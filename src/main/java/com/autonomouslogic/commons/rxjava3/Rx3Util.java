@@ -12,6 +12,7 @@ import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.functions.Predicate;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.Optional;
@@ -163,7 +164,15 @@ public class Rx3Util {
 		return new CheckOrder<T>(comparator);
 	}
 
-	public static <T> FlowableTransformer<T, T> retryWithDelayFlowable(int tries, Duration delay) {
+	public static <T> FlowableTransformer<T, T> retryWithDelayFlowable(int times, Duration delay) {
+		return retryWithDelayFlowable(times, delay, e -> true);
+	}
+
+	public static <T> FlowableTransformer<T, T> retryWithDelayFlowable(
+			int times, Duration delay, Predicate<? super Throwable> predicate) {
+		if (times < 0) {
+			throw new IllegalArgumentException("times >= 0 required but it was " + times);
+		}
 		var delayNs = delay.toNanos();
 		if (delayNs < 0) {
 			throw new IllegalArgumentException("delay must be zero or more");
@@ -171,7 +180,8 @@ public class Rx3Util {
 		return upstream -> upstream.retryWhen(e -> {
 			var t = new AtomicInteger();
 			return e.flatMap(err -> {
-				if (t.incrementAndGet() <= tries) {
+				int i = t.incrementAndGet();
+				if (i <= times && predicate.test(err)) {
 					return Flowable.timer(delayNs, TimeUnit.NANOSECONDS);
 				}
 				return Flowable.error(err);

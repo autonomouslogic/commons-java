@@ -196,11 +196,11 @@ class Rx3UtilTest {
 	@Test
 	@SneakyThrows
 	void shouldRetryWithDelay() {
-		var i = new AtomicInteger();
+		var count = new AtomicInteger();
 		var times = new ArrayList<Instant>();
 		var result = Flowable.defer(() -> {
 					times.add(Instant.now());
-					if (i.incrementAndGet() < 3) {
+					if (count.incrementAndGet() < 3) {
 						return Flowable.error(new RuntimeException("test error"));
 					}
 					return Flowable.just("result");
@@ -209,10 +209,32 @@ class Rx3UtilTest {
 				.compose(Rx3Util.retryWithDelayFlowable(2, Duration.ofSeconds(1)))
 				.blockingFirst();
 		assertEquals("result", result);
-		assertEquals(3, i.get());
+		assertEquals(3, count.get());
 		assertEquals(3, times.size());
 		for (int j = 0; j < 2; j++) {
-			assertEquals(1000, Duration.between(times.get(j), times.get(j+1)).toMillis(), 100);
+			assertEquals(1000, Duration.between(times.get(j), times.get(j + 1)).toMillis(), 100);
+		}
+	}
+
+	@Test
+	@SneakyThrows
+	void shouldRetryWithDelayPredicate() {
+		var count = new AtomicInteger();
+		var times = new ArrayList<Instant>();
+		Supplier<?> func = () -> Flowable.defer(() -> {
+					times.add(Instant.now());
+					return Flowable.error(new RuntimeException("test error " + count.getAndIncrement()));
+				})
+				.subscribeOn(Schedulers.computation())
+				.compose(Rx3Util.retryWithDelayFlowable(
+						100, Duration.ofSeconds(1), e -> !e.getMessage().equals("test error 2")))
+				.blockingFirst();
+		var e = assertThrows(RuntimeException.class, func::get);
+		assertEquals("test error 2", e.getMessage());
+		assertEquals(3, count.get());
+		assertEquals(3, times.size());
+		for (int j = 0; j < 2; j++) {
+			assertEquals(1000, Duration.between(times.get(j), times.get(j + 1)).toMillis(), 100);
 		}
 	}
 }
