@@ -1,5 +1,12 @@
 Commons Java Changelog
 
+## [1.7.0](https://github.com/autonomouslogic/commons-java/compare/1.6.3...1.7.0) (2023-05-24)
+
+
+### Features
+
+* Retry with delay ([#30](https://github.com/autonomouslogic/commons-java/issues/30)) ([07925fe](https://github.com/autonomouslogic/commons-java/commit/07925fe92b21a440d2d19a26fca6f7e21a44baeb))
+
 ## [1.6.3](https://github.com/autonomouslogic/commons-java/compare/1.6.2...1.6.3) (2023-05-01)
 
 
