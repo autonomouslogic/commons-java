@@ -10,10 +10,14 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
@@ -187,5 +191,28 @@ class Rx3UtilTest {
 				.toList();
 		var e = assertThrows(RuntimeException.class, () -> result.blockingGet());
 		assertEquals("Stream isn't ordered - last: 5, current: 4", e.getMessage());
+	}
+
+	@Test
+	@SneakyThrows
+	void shouldRetryWithDelay() {
+		var i = new AtomicInteger();
+		var times = new ArrayList<Instant>();
+		var result = Flowable.defer(() -> {
+					times.add(Instant.now());
+					if (i.incrementAndGet() < 3) {
+						return Flowable.error(new RuntimeException("test error"));
+					}
+					return Flowable.just("result");
+				})
+				.subscribeOn(Schedulers.computation())
+				.compose(Rx3Util.retryWithDelayFlowable(2, Duration.ofSeconds(1)))
+				.blockingFirst();
+		assertEquals("result", result);
+		assertEquals(3, i.get());
+		assertEquals(3, times.size());
+		for (int j = 0; j < 2; j++) {
+			assertEquals(1000, Duration.between(times.get(j), times.get(j+1)).toMillis(), 100);
+		}
 	}
 }
