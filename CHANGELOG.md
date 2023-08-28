@@ -1,5 +1,12 @@
 Commons Java Changelog
 
+## [1.7.3](https://github.com/autonomouslogic/commons-java/compare/1.7.2...1.7.3) (2023-08-28)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.google.guava:guava to v32 ([#31](https://github.com/autonomouslogic/commons-java/issues/31)) ([20f6c12](https://github.com/autonomouslogic/commons-java/commit/20f6c1255de0bd27f929e933f90b59785b51ae5c))
+
 ## [1.7.2](https://github.com/autonomouslogic/commons-java/compare/1.7.1...1.7.2) (2023-08-07)
 
 
