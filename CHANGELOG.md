@@ -1,5 +1,12 @@
 Commons Java Changelog
 
+## [1.7.4](https://github.com/autonomouslogic/commons-java/compare/1.7.3...1.7.4) (2023-09-04)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#35](https://github.com/autonomouslogic/commons-java/issues/35)) ([9bf2277](https://github.com/autonomouslogic/commons-java/commit/9bf2277810e24ce330d61d6a425b859f7c0ab814))
+
 ## [1.7.3](https://github.com/autonomouslogic/commons-java/compare/1.7.2...1.7.3) (2023-08-28)
 
 
