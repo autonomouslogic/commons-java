@@ -17,13 +17,13 @@ public class SimpleUpdater<T, M, R> {
 	private final UpdateTransformer<T, M, R> transformer;
 
 	private volatile UpdateItem<T, M> lastUpdate;
-	private volatile UpdateItem<R, M> lastTransformed;
 
 	public Publisher<UpdateItem<R, M>> updateNow() {
 		return Maybe.fromPublisher(updater.fetchUpdate(lastUpdate))
 				.filter(item -> checker.isNew(lastUpdate, item))
 				.map(item -> {
-					var transformed = UpdateItem.of(item.getUpdateMeta(), transformer.transform(item));
+					lastUpdate = item;
+					var transformed = UpdateItem.of(transformer.transform(item), item.getUpdateMeta());
 					return transformed;
 				})
 				.toFlowable();

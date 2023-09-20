@@ -8,18 +8,18 @@ import lombok.Value;
 @Value
 @AllArgsConstructor(staticName = "of")
 public class UpdateItem<T, M> {
-	UpdateMeta<M> updateMeta;
 	T item;
+	UpdateMeta<M> updateMeta;
 
 	public static <T, M> UpdateItem<T, M> from(T item, M meta) {
-		return of(UpdateMeta.of(meta), item);
+		return of(item, UpdateMeta.from(meta));
 	}
 
 	public static <T, M> UpdateItem<T, M> from(T item, M meta, Instant time) {
-		return of(UpdateMeta.of(meta, time), item);
+		return of(item, UpdateMeta.of(meta, time));
 	}
 
 	public static <T, M> UpdateItem<T, M> from(T item, M meta, Clock clock) {
-		return of(UpdateMeta.of(meta, clock), item);
+		return of(item, UpdateMeta.from(meta, clock));
 	}
 }
