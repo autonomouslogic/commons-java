@@ -11,11 +11,11 @@ public class UpdateMeta<M> {
 	M meta;
 	Instant lastUpdated;
 
-	static <M> UpdateMeta<M> from(M meta) {
+	public static <M> UpdateMeta<M> from(M meta) {
 		return from(meta, Clock.systemUTC());
 	}
 
-	static <M> UpdateMeta<M> from(M meta, Clock clock) {
+	public static <M> UpdateMeta<M> from(M meta, Clock clock) {
 		return of(meta, clock.instant());
 	}
 }

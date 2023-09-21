@@ -32,7 +32,7 @@ public class SimpleUpdaterTest {
 		checker = Mockito.mock(UpdateChecker.class);
 		transformer = Mockito.mock(UpdateTransformer.class);
 
-		updater = SimpleUpdater.from(fetcher, checker, transformer);
+		updater = new SimpleUpdater<>(fetcher, checker, transformer);
 		inOrder = Mockito.inOrder(fetcher, checker, transformer);
 
 		when(transformer.transform(any())).thenAnswer(invocation -> {

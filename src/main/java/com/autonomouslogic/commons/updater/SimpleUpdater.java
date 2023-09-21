@@ -5,7 +5,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.reactivestreams.Publisher;
 
-@RequiredArgsConstructor(staticName = "from")
+@RequiredArgsConstructor
 public class SimpleUpdater<T, M, R> {
 	@NonNull
 	private final UpdateFetcher<T, M> updater;
