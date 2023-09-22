@@ -75,7 +75,7 @@ public class HttpFetcher implements UpdateFetcher<Path, HttpMeta> {
 	private static UpdateItem<Path, HttpMeta> createUpdate(HttpResponse<Path> response, Path file) {
 		var etag = getHeader(response, "ETag").orElse(null);
 		var lastModified = getHeader(response, "Last-Modified")
-				.map(s -> HTTP_DATE_TIME.parse(s, ZonedDateTime::from))
+				.map(s -> HTTP_DATE_TIME.parse(s, ZonedDateTime::from).toInstant())
 				.orElse(null);
 		return UpdateItem.from(file, new HttpMeta(lastModified, etag));
 	}

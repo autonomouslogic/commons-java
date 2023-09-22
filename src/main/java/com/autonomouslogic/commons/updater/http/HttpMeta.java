@@ -1,10 +1,10 @@
 package com.autonomouslogic.commons.updater.http;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import lombok.Value;
 
 @Value
 public class HttpMeta {
-	ZonedDateTime lastModified;
+	Instant lastModified;
 	String etag;
 }
