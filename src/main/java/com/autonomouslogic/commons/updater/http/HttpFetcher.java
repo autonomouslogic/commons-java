@@ -13,6 +13,7 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -26,8 +27,10 @@ import org.reactivestreams.Publisher;
 
 @RequiredArgsConstructor
 public class HttpFetcher implements UpdateFetcher<Path, HttpMeta> {
-	private static final DateTimeFormatter HTTP_DATE_TIME =
-			DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH);
+	private static final ZoneId GMT_ZONE = ZoneId.of("GMT");
+	private static final DateTimeFormatter HTTP_DATE_TIME = DateTimeFormatter.ofPattern(
+					"EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
+			.withZone(GMT_ZONE);
 
 	@NonNull
 	private final URI uri;
@@ -88,7 +91,9 @@ public class HttpFetcher implements UpdateFetcher<Path, HttpMeta> {
 				builder.header("If-None-Match", meta.getEtag());
 			}
 			if (useIfModifiedSince && meta.getLastModified() != null) {
-				builder.header("If-Modified-Since", HTTP_DATE_TIME.format(meta.getLastModified()));
+				builder.header(
+						"If-Modified-Since",
+						HTTP_DATE_TIME.format(meta.getLastModified().atZone(GMT_ZONE)));
 			}
 		}
 		requestBuilder.accept(builder);
