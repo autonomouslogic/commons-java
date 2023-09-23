@@ -3,7 +3,7 @@ plugins {
 	id "idea"
 	id "application"
 	id "jacoco"
-	id "io.freefair.lombok" version "8.3"
+	id "io.freefair.lombok" version "8.1.0"
 	id "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin" version "1.1.10"
 	id "com.diffplug.spotless" version "6.21.0"
 	id "maven-publish"
@@ -21,16 +21,23 @@ repositories {
 }
 
 dependencies {
-	implementation "com.google.guava:guava:32.1.2-jre"
-	//implementation "com.diffplug.durian:durian:3.4.0"
+	implementation "org.slf4j:slf4j-api:2.0.9"
 
+	compileOnly "com.google.guava:guava:32.1.2-jre"
 	compileOnly "io.reactivex.rxjava3:rxjava:3.1.7"
+	compileOnly "org.apache.commons:commons-lang3:3.12.0"
+	compileOnly "software.amazon.awssdk:s3:2.20.97"
 
-	testImplementation "org.mockito:mockito-core:5.5.0"
+	testImplementation "com.google.guava:guava:32.1.2-jre"
+	testImplementation "io.reactivex.rxjava3:rxjava:3.1.7"
+	testImplementation "org.apache.commons:commons-lang3:3.12.0"
+	testImplementation "software.amazon.awssdk:s3:2.20.97"
+
 	testImplementation "org.junit.jupiter:junit-jupiter-api:5.10.0"
 	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.10.0"
+	testImplementation "org.mockito:mockito-core:5.5.0"
 	testImplementation "commons-io:commons-io:2.13.0"
-	testImplementation "io.reactivex.rxjava3:rxjava:3.1.7"
+	testImplementation "com.squareup.okhttp3:mockwebserver:4.11.0"
 }
 
 test {
