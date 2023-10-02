@@ -1,5 +1,17 @@
 Commons Java Changelog
 
+## [1.7.5](https://github.com/autonomouslogic/commons-java/compare/1.7.4...1.7.5) (2023-10-02)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#39](https://github.com/autonomouslogic/commons-java/issues/39)) ([f4b85de](https://github.com/autonomouslogic/commons-java/commit/f4b85de79ba502f80d65566a179042e5aaaf63f3))
+
+
+### Continuous Integration
+
+* update actions/checkout action to v4 ([#36](https://github.com/autonomouslogic/commons-java/issues/36)) ([bafc6b7](https://github.com/autonomouslogic/commons-java/commit/bafc6b75570a06e6eaaf0928bb6c5bc1e1cbcb31))
+
 ## [1.7.4](https://github.com/autonomouslogic/commons-java/compare/1.7.3...1.7.4) (2023-09-04)
 
 
