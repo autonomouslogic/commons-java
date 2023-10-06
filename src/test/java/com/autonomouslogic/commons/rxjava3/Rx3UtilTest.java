@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.FlowableTransformer;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableTransformer;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -23,6 +24,9 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
 class Rx3UtilTest {
+	private static final ObservableTransformer<String, String> IDENTITY_OBSERVABLE_TRANSFORMER = upstream -> upstream;
+	private static final FlowableTransformer<String, String> IDENTITY_FLOWABLE_TRANSFORMER = upstream -> upstream;
+
 	RuntimeException textEx = new RuntimeException("test error");
 
 	@Test
@@ -81,11 +85,11 @@ class Rx3UtilTest {
 	}
 
 	@Test
-	void shouldWrapTransformerErrors() {
+	void shouldWrapObservableTransformerErrors() {
 		var observable = Observable.just("result")
 				.observeOn(Schedulers.computation())
-				.compose(Rx3Util.wrapTransformerErrors(
-						"wrapped error", upstream -> Observable.error(new RuntimeException("inner error"))));
+				.compose(Rx3Util.wrapTransformerErrors("wrapped error", (ObservableTransformer<String, String>)
+						upstream -> Observable.error(new RuntimeException("inner error"))));
 		var ex = assertThrows(RuntimeException.class, observable::blockingFirst);
 		ex.printStackTrace();
 		assertEquals("wrapped error", ex.getMessage());
@@ -93,13 +97,13 @@ class Rx3UtilTest {
 	}
 
 	@Test
-	void shouldNotAffectErrorsBeforeWrappingTransformer() {
+	void shouldNotAffectErrorsBeforeWrappingObservableTransformer() {
 		Observable<String> observable = Observable.just("result")
 				.observeOn(Schedulers.computation())
 				.compose((ObservableTransformer<String, String>)
 						upstream -> Observable.error(new RuntimeException("before error")))
 				.observeOn(Schedulers.computation())
-				.compose(Rx3Util.wrapTransformerErrors("wrapped error", upstream -> upstream));
+				.compose(Rx3Util.wrapTransformerErrors("wrapped error", IDENTITY_OBSERVABLE_TRANSFORMER));
 		var ex = assertThrows(RuntimeException.class, observable::blockingFirst);
 		ex.printStackTrace();
 		assertEquals("before error", ex.getMessage());
@@ -107,10 +111,10 @@ class Rx3UtilTest {
 	}
 
 	@Test
-	void shouldNotAffectErrorsAfterWrappingTransformer() {
+	void shouldNotAffectErrorsAfterWrappingObservableTransformer() {
 		Observable<String> observable = Observable.just("result")
 				.observeOn(Schedulers.computation())
-				.compose(Rx3Util.wrapTransformerErrors("wrapped error", upstream -> upstream))
+				.compose(Rx3Util.wrapTransformerErrors("wrapped error", IDENTITY_OBSERVABLE_TRANSFORMER))
 				.observeOn(Schedulers.computation())
 				.compose(upstream -> Observable.error(new RuntimeException("after error")));
 		var ex = assertThrows(RuntimeException.class, observable::blockingFirst);
@@ -120,11 +124,59 @@ class Rx3UtilTest {
 	}
 
 	@Test
-	void shouldNotBlockResultsWhenWrappingTransformer() {
+	void shouldNotBlockResultsWhenWrappingObservableTransformer() {
 		Observable<String> observable = Observable.just("result")
 				.observeOn(Schedulers.computation())
-				.compose(Rx3Util.wrapTransformerErrors("wrapped error", upstream -> upstream));
+				.compose(Rx3Util.wrapTransformerErrors("wrapped error", IDENTITY_OBSERVABLE_TRANSFORMER));
 		var result = observable.blockingFirst();
+		assertEquals("result", result);
+	}
+
+	@Test
+	void shouldWrapFlowableTransformerErrors() {
+		var flowable = Flowable.just("result")
+				.observeOn(Schedulers.computation())
+				.compose(Rx3Util.wrapTransformerErrors("wrapped error", (FlowableTransformer<? super String, String>)
+						upstream -> Flowable.error(new RuntimeException("inner error"))));
+		var ex = assertThrows(RuntimeException.class, flowable::blockingFirst);
+		ex.printStackTrace();
+		assertEquals("wrapped error", ex.getMessage());
+		assertEquals("inner error", ex.getCause().getMessage());
+	}
+
+	@Test
+	void shouldNotAffectErrorsBeforeWrappingFlowableTransformer() {
+		Flowable<String> flowable = Flowable.just("result")
+				.observeOn(Schedulers.computation())
+				.compose((FlowableTransformer<String, String>)
+						upstream -> Flowable.error(new RuntimeException("before error")))
+				.observeOn(Schedulers.computation())
+				.compose(Rx3Util.wrapTransformerErrors("wrapped error", IDENTITY_FLOWABLE_TRANSFORMER));
+		var ex = assertThrows(RuntimeException.class, flowable::blockingFirst);
+		ex.printStackTrace();
+		assertEquals("before error", ex.getMessage());
+		assertNull(ex.getCause());
+	}
+
+	@Test
+	void shouldNotAffectErrorsAfterWrappingFlowableTransformer() {
+		Flowable<String> flowable = Flowable.just("result")
+				.observeOn(Schedulers.computation())
+				.compose(Rx3Util.wrapTransformerErrors("wrapped error", IDENTITY_FLOWABLE_TRANSFORMER))
+				.observeOn(Schedulers.computation())
+				.compose(upstream -> Flowable.error(new RuntimeException("after error")));
+		var ex = assertThrows(RuntimeException.class, flowable::blockingFirst);
+		ex.printStackTrace();
+		assertEquals("after error", ex.getMessage());
+		assertNull(ex.getCause());
+	}
+
+	@Test
+	void shouldNotBlockResultsWhenWrappingFlowableTransformer() {
+		Flowable<String> flowable = Flowable.just("result")
+				.observeOn(Schedulers.computation())
+				.compose(Rx3Util.wrapTransformerErrors("wrapped error", IDENTITY_FLOWABLE_TRANSFORMER));
+		var result = flowable.blockingFirst();
 		assertEquals("result", result);
 	}
 
