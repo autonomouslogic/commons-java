@@ -1,6 +1,7 @@
 package com.autonomouslogic.commons.rxjava3;
 
 import com.autonomouslogic.commons.rxjava3.internal.CheckOrder;
+import com.autonomouslogic.commons.rxjava3.internal.ErrorWrapFlowableTransformer;
 import com.autonomouslogic.commons.rxjava3.internal.ErrorWrapObservableTransformer;
 import com.autonomouslogic.commons.rxjava3.internal.OrderedMerger;
 import com.autonomouslogic.commons.rxjava3.internal.ZipAll;
@@ -104,7 +105,7 @@ public class Rx3Util {
 	 * <code>transformer</code> will be wrapped in a {@link RuntimeException} with the provided message.
 	 * Any errors occurring before or after the <code>transformer</code> is applied are not subject to exception
 	 * wrapping.
-	 * This is useful when debugging multithreaded asynchronous code where the relevant stack trace can get lost.
+	 * This is useful when debugging multi-threaded asynchronous code where the relevant stack trace can get lost.
 	 *
 	 * @param message message for the exception
 	 * @param transformer transformer used for composition
@@ -115,6 +116,24 @@ public class Rx3Util {
 	public static <U, D> ObservableTransformer<U, D> wrapTransformerErrors(
 			String message, ObservableTransformer<U, D> transformer) {
 		return new ErrorWrapObservableTransformer<>(message, transformer);
+	}
+
+	/**
+	 * Wraps an {@link FlowableTransformer} such that any errors thrown from anything done by the
+	 * <code>transformer</code> will be wrapped in a {@link RuntimeException} with the provided message.
+	 * Any errors occurring before or after the <code>transformer</code> is applied are not subject to exception
+	 * wrapping.
+	 * This is useful when debugging multi-threaded asynchronous code where the relevant stack trace can get lost.
+	 *
+	 * @param message message for the exception
+	 * @param transformer transformer used for composition
+	 * @return a new transformer
+	 * @param <U> see FlowableTransformer
+	 * @param <D> see FlowableTransformer
+	 */
+	public static <U, D> FlowableTransformer<U, D> wrapTransformerErrors(
+			String message, FlowableTransformer<U, D> transformer) {
+		return new ErrorWrapFlowableTransformer<>(message, transformer);
 	}
 
 	/**
