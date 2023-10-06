@@ -1,5 +1,12 @@
 Commons Java Changelog
 
+## [1.8.0](https://github.com/autonomouslogic/commons-java/compare/1.7.5...1.8.0) (2023-10-06)
+
+
+### Features
+
+* Flowable transformer error wrapping ([#41](https://github.com/autonomouslogic/commons-java/issues/41)) ([a5d313b](https://github.com/autonomouslogic/commons-java/commit/a5d313b510e4ef2189d582589b5032361f6d3f2e))
+
 ## [1.7.5](https://github.com/autonomouslogic/commons-java/compare/1.7.4...1.7.5) (2023-10-02)
 
 
