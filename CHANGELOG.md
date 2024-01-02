@@ -1,5 +1,19 @@
 Commons Java Changelog
 
+## [1.8.2](https://github.com/autonomouslogic/commons-java/compare/1.8.1...1.8.2) (2024-01-02)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.google.guava:guava to v33 ([#47](https://github.com/autonomouslogic/commons-java/issues/47)) ([1ee78f6](https://github.com/autonomouslogic/commons-java/commit/1ee78f64b29b82b173d9b96098201f0279d6f774))
+
+
+### Miscellaneous Chores
+
+* **deps:** update actions/setup-java action to v4 ([#44](https://github.com/autonomouslogic/commons-java/issues/44)) ([fc2e7de](https://github.com/autonomouslogic/commons-java/commit/fc2e7de8d3ec0956b1cb6b59fe4b6280c9c07f41))
+* **deps:** update plugin com.diffplug.spotless to v6.23.3 ([#46](https://github.com/autonomouslogic/commons-java/issues/46)) ([02808a8](https://github.com/autonomouslogic/commons-java/commit/02808a8a8c8fe1f498ec03cdcf49f86d9f56bc1c))
+* **deps:** update plugin org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin to v2 ([#42](https://github.com/autonomouslogic/commons-java/issues/42)) ([3f39da9](https://github.com/autonomouslogic/commons-java/commit/3f39da949d297bbb25f05f7985eb112ffcc83b25))
+
 ## [1.8.1](https://github.com/autonomouslogic/commons-java/compare/1.8.0...1.8.1) (2023-12-04)
 
 
