@@ -1,5 +1,18 @@
 Commons Java Changelog
 
+## [1.8.3](https://github.com/autonomouslogic/commons-java/compare/1.8.2...1.8.3) (2024-02-05)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#50](https://github.com/autonomouslogic/commons-java/issues/50)) ([8d0891f](https://github.com/autonomouslogic/commons-java/commit/8d0891f394bfa57eb331c679252a8c0ebd428e2a))
+
+
+### Miscellaneous Chores
+
+* **deps:** update dependency gradle to v7.6.4 ([#51](https://github.com/autonomouslogic/commons-java/issues/51)) ([6605e68](https://github.com/autonomouslogic/commons-java/commit/6605e684c2f4622eeb308c9a14eaf26843b8f2b8))
+* **deps:** update plugin org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin to v3 ([#48](https://github.com/autonomouslogic/commons-java/issues/48)) ([99d51c2](https://github.com/autonomouslogic/commons-java/commit/99d51c20d295972298aa602dcf8443bde53255de))
+
 ## [1.8.2](https://github.com/autonomouslogic/commons-java/compare/1.8.1...1.8.2) (2024-01-02)
 
 
