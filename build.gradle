@@ -49,8 +49,8 @@ test {
 jacocoTestReport {
 	executionData(test)
 	reports {
-		xml.enabled true
-		html.enabled true
+		xml.required = true
+		html.required = true
 	}
 }
 
