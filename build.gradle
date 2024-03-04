@@ -3,8 +3,8 @@ plugins {
 	id "idea"
 	id "application"
 	id "jacoco"
-	id "io.freefair.lombok" version "8.4"
-	id "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin" version "3.1.1"
+	id "io.freefair.lombok" version "8.6"
+	id "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin" version "3.1.2"
 	id "com.diffplug.spotless" version "6.25.0"
 	id "maven-publish"
 	id "signing"
@@ -26,7 +26,7 @@ dependencies {
 
 	compileOnly "io.reactivex.rxjava3:rxjava:3.1.8"
 
-	testImplementation "org.mockito:mockito-core:5.10.0"
+	testImplementation "org.mockito:mockito-core:5.11.0"
 	testImplementation "org.junit.jupiter:junit-jupiter-api:5.10.2"
 	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.10.2"
 	testImplementation "commons-io:commons-io:2.15.1"
