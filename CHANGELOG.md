@@ -1,5 +1,18 @@
 Commons Java Changelog
 
+## [1.8.4](https://github.com/autonomouslogic/commons-java/compare/1.8.3...1.8.4) (2024-03-05)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#52](https://github.com/autonomouslogic/commons-java/issues/52)) ([e38a394](https://github.com/autonomouslogic/commons-java/commit/e38a394489500d3339ba4812e3d16ce5dc0f7408))
+
+
+### Miscellaneous Chores
+
+* **deps:** update codecov/codecov-action action to v4 [skip release] ([#49](https://github.com/autonomouslogic/commons-java/issues/49)) ([f4614ae](https://github.com/autonomouslogic/commons-java/commit/f4614ae7224179ffb8c34fe974f8383ae885840c))
+* **deps:** update dependency gradle to v8 [skip release] ([#25](https://github.com/autonomouslogic/commons-java/issues/25)) ([1b58d9a](https://github.com/autonomouslogic/commons-java/commit/1b58d9ad811dab3d08b9fd06f1d368b11c090a6e))
+
 ## [1.8.3](https://github.com/autonomouslogic/commons-java/compare/1.8.2...1.8.3) (2024-02-05)
 
 
