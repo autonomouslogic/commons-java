@@ -23,8 +23,6 @@ repositories {
 dependencies {
 	implementation "com.google.guava:guava:33.2.0-jre"
 	//implementation "com.diffplug.durian:durian:3.4.0"
-	implementation "org.apache.commons:commons-lang3:3.14.0"
-	implementation "commons-io:commons-io:2.15.1"
 
 	compileOnly "io.reactivex.rxjava3:rxjava:3.1.8"
 

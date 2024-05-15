@@ -2,6 +2,7 @@ package com.autonomouslogic.commons.config;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -13,8 +14,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * A simple tool for defining and reading configs from environment variables.
@@ -88,12 +87,24 @@ public class Config<T> {
 		if (!file.exists()) {
 			throw new FileNotFoundException(filename);
 		}
-		var value = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-		value = StringUtils.trim(value);
+		var value = readFile(file);
 		if (value.isEmpty()) {
 			return Optional.empty();
 		}
 		return Optional.of(parse(env, value));
+	}
+
+	@SneakyThrows
+	private String readFile(File file) {
+		var builder = new StringBuilder();
+		var buffer = new char[1024];
+		try (var reader = new FileReader(file, StandardCharsets.UTF_8)) {
+			int n;
+			while (-1 != (n = reader.read(buffer))) {
+				builder.append(buffer, 0, n);
+			}
+		}
+		return builder.toString().trim();
 	}
 
 	private T parse(String env, String value) {
