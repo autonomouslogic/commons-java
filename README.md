@@ -8,12 +8,13 @@
 Common Java functionality.
 The implementations in this library are intended to solve simple problems in simple ways.
 
-* [ListUtil](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/ListUtil.html)
-* [SetUtil](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/SetUtil.html)
-* [ResourceUtil](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/ResourceUtil.html)
 * [CachedSupplier](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/cache/CachedSupplier.html)
-* [Stopwatch](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/Stopwatch.html)
+* [Config](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/config/Config.html)
+* [ListUtil](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/ListUtil.html)
+* [ResourceUtil](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/ResourceUtil.html)
 * [Rx3Util](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/rxjava3/Rx3Util.html)
+* [SetUtil](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/SetUtil.html)
+* [Stopwatch](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/Stopwatch.html)
 
 ## Usage
 

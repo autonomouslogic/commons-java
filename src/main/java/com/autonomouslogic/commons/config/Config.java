@@ -16,6 +16,29 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
+/**
+ * A simple tool for defining and reading configs from environment variables.
+ * Configs are defined like this:
+ * <code>
+ * public class Configs {
+ *     public static final Config<String> VARIABLE_NAME = Config.<String>builder()
+ *         .name("VARIABLE_NAME")
+ *         .type(String.class)
+ *         .defaultValue("dev") // optional
+ *         .defaultMethod(() -> "dev") // optional
+ *         .build();
+ * }
+ * </code>
+ * And can then be read by {@link #get()} which returns an <code>Optional</code>,
+ * or by {@link #getRequired()} which throws an exception if not found.
+ *
+ * A <code>_FILE</code> suffix is also supported for reading config values from files.
+ * This is useful for storing secrets to avoid them being present directly in the environment.
+ * In the example above, setting the environment variable <code>VARIABLE_NAME_FILE=/tmp/value.secret</code> would cause
+ * the contents of <code>/tmp/value.secret</code> to be used instead.
+ *
+ * @param <T>
+ */
 @Builder
 public class Config<T> {
 	@NonNull
