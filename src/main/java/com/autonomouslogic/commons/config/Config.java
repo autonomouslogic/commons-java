@@ -18,7 +18,8 @@ import lombok.SneakyThrows;
 /**
  * A simple tool for defining and reading configs from environment variables.
  * Configs are defined like this:
- * <code>
+ * <pre>
+ * {@code
  * public class Configs {
  *     public static final Config<String> VARIABLE_NAME = Config.<String>builder()
  *         .name("VARIABLE_NAME")
@@ -27,7 +28,8 @@ import lombok.SneakyThrows;
  *         .defaultMethod(() -> "dev") // optional
  *         .build();
  * }
- * </code>
+ * }
+ * </pre>
  * And can then be read by {@link #get()} which returns an <code>Optional</code>,
  * or by {@link #getRequired()} which throws an exception if not found.
  *
