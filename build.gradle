@@ -72,6 +72,12 @@ java {
 	withSourcesJar()
 }
 
+javadoc {
+	options {
+		addBooleanOption "Xdoclint:all,-html,-missing", true
+	}
+}
+
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
