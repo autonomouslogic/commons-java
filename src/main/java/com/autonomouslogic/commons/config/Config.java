@@ -36,8 +36,6 @@ import org.apache.commons.lang3.StringUtils;
  * This is useful for storing secrets to avoid them being present directly in the environment.
  * In the example above, setting the environment variable <code>VARIABLE_NAME_FILE=/tmp/value.secret</code> would cause
  * the contents of <code>/tmp/value.secret</code> to be used instead.
- *
- * @param <T>
  */
 @Builder
 public class Config<T> {
