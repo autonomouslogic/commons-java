@@ -160,4 +160,9 @@ public class Config<T> {
 		}
 		return Optional.empty();
 	}
+
+	@Override
+	public String toString() {
+		return "Config{" + "name='" + name + '\'' + '}';
+	}
 }
