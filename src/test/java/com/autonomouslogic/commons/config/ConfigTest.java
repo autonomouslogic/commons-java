@@ -41,6 +41,7 @@ public class ConfigTest {
 	public static Stream<Arguments> parseProvider() {
 		return Stream.of(
 				Arguments.of(stringConfig, "test-value"),
+				Arguments.of(integerConfig, 12345),
 				Arguments.of(longConfig, 12345L),
 				Arguments.of(floatConfig, 12345.6789f),
 				Arguments.of(doubleConfig, 12345.6789d),
@@ -50,7 +51,7 @@ public class ConfigTest {
 				Arguments.of(
 						durationConfig,
 						Duration.ofHours(3).plusMinutes(7).plusSeconds(13).plusMillis(334)),
-				Arguments.of(periodConfig, Period.ofDays(7).plusDays(5)),
+				Arguments.of(periodConfig, Period.ofMonths(7).plusDays(5)),
 				Arguments.of(uriConfig, URI.create("http://example.com/page")));
 	}
 
