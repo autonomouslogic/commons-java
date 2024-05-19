@@ -3,11 +3,7 @@ package com.autonomouslogic.commons.config;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.Period;
 import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.Builder;
@@ -48,6 +44,7 @@ public class Config<T> {
 	Class<T> type;
 
 	T defaultValue;
+
 	Supplier<Optional<T>> defaultMethod;
 
 	public Optional<T> get() {
@@ -111,40 +108,16 @@ public class Config<T> {
 
 	private T parse(String env, String value) {
 		try {
-			if (type == String.class) {
-				return type.cast(value);
-			}
-			if (type == Integer.class) {
-				return type.cast(Integer.parseInt(value));
-			}
-			if (type == Long.class) {
-				return type.cast(Long.parseLong(value));
-			}
-			if (type == Float.class) {
-				return type.cast(Float.parseFloat(value));
-			}
-			if (type == Double.class) {
-				return type.cast(Double.parseDouble(value));
-			}
-			if (type == Boolean.class) {
-				return type.cast(Boolean.parseBoolean(value));
-			}
-			if (type == LocalDate.class) {
-				return type.cast(LocalDate.parse(value));
-			}
-			if (type == Duration.class) {
-				return type.cast(Duration.parse(value));
-			}
-			if (type == Period.class) {
-				return type.cast(Period.parse(value));
-			}
-			if (type == URI.class) {
-				return type.cast(new URI(value));
-			}
+			return getParser(env).parse(value);
 		} catch (Exception e) {
 			throw new IllegalArgumentException(String.format("Unable to parse value in %s as type %s", env, type));
 		}
-		throw new IllegalArgumentException(String.format("Unsupported type %s for %s", type, env));
+	}
+
+	private ConfigParser<T> getParser(String env) {
+		return DefaultConfigParsers.getParser(type)
+				.orElseThrow(
+						() -> new IllegalArgumentException(String.format("Unsupported type %s for %s", type, env)));
 	}
 
 	private Optional<T> getDefaultValue() {
