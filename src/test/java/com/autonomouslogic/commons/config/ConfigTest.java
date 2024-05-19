@@ -33,8 +33,13 @@ import org.junitpioneer.jupiter.SetEnvironmentVariable;
 public class ConfigTest {
 	@ParameterizedTest
 	@MethodSource("parseProvider")
-	void shouldReadValues(Config<?> config, Object expected) {
+	void shouldReadOptionalValues(Config<?> config, Object expected) {
 		assertEquals(Optional.of(expected), config.get());
+	}
+
+	@ParameterizedTest
+	@MethodSource("parseProvider")
+	void shouldReadRequiredValues(Config<?> config, Object expected) {
 		assertEquals(expected, config.getRequired());
 	}
 
@@ -52,7 +57,9 @@ public class ConfigTest {
 						durationConfig,
 						Duration.ofHours(3).plusMinutes(7).plusSeconds(13).plusMillis(334)),
 				Arguments.of(periodConfig, Period.ofMonths(7).plusDays(5)),
-				Arguments.of(uriConfig, URI.create("http://example.com/page")));
+				Arguments.of(uriConfig, URI.create("http://example.com/page")),
+				Arguments.of(customParserConfig, "test-value-custom"),
+				Arguments.of(integerMethodReferenceConfig, 12345));
 	}
 
 	static Config<String> stringConfig = Config.<String>builder()
@@ -104,11 +111,29 @@ public class ConfigTest {
 	static Config<URI> uriConfig =
 			Config.<URI>builder().name("TEST_ENV_VAR_URI").type(URI.class).build();
 
+	static Config<String> customParserConfig = Config.<String>builder()
+			.name("TEST_ENV_VAR_STRING")
+			.type(String.class)
+			.parser(value -> value + "-custom")
+			.build();
+
+	static Config<Integer> integerMethodReferenceConfig = Config.<Integer>builder()
+			.name("TEST_ENV_VAR_INTEGER")
+			.type(Integer.class)
+			.parser(Integer::parseInt)
+			.build();
+
 	@Test
-	void shouldGetUnknownValues() {
+	void shouldGetMissingValues() {
 		var config =
 				Config.<String>builder().name("UNKNOWN_VAR").type(String.class).build();
 		assertEquals(Optional.empty(), config.get());
+	}
+
+	@Test
+	void shouldErrorOnMissingRequiredValues() {
+		var config =
+				Config.<String>builder().name("UNKNOWN_VAR").type(String.class).build();
 		var e = assertThrows(IllegalArgumentException.class, config::getRequired);
 		assertEquals("No value for UNKNOWN_VAR", e.getMessage());
 	}

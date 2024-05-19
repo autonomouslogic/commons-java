@@ -43,6 +43,8 @@ public class Config<T> {
 	@NonNull
 	Class<T> type;
 
+	ConfigParser<T> parser;
+
 	T defaultValue;
 
 	Supplier<Optional<T>> defaultMethod;
@@ -115,7 +117,8 @@ public class Config<T> {
 	}
 
 	private ConfigParser<T> getParser(String env) {
-		return DefaultConfigParsers.getParser(type)
+		return Optional.ofNullable(parser)
+				.or(() -> DefaultConfigParsers.getParser(type))
 				.orElseThrow(
 						() -> new IllegalArgumentException(String.format("Unsupported type %s for %s", type, env)));
 	}
