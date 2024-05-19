@@ -6,11 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
@@ -50,6 +53,8 @@ public class ConfigTest {
 				Arguments.of(longConfig, 12345L),
 				Arguments.of(floatConfig, 12345.6789f),
 				Arguments.of(doubleConfig, 12345.6789d),
+				Arguments.of(bigIntegerConfig, BigInteger.valueOf(12345L)),
+				Arguments.of(bigDecimalConfig, BigDecimal.valueOf(12345.6789d)),
 				Arguments.of(booleanConfigTrue, true),
 				Arguments.of(booleanConfigFalse, false),
 				Arguments.of(localDateConfig, LocalDate.parse("2021-06-27")),
@@ -81,6 +86,16 @@ public class ConfigTest {
 	static Config<Double> doubleConfig = Config.<Double>builder()
 			.name("TEST_ENV_VAR_FLOAT")
 			.type(Double.class)
+			.build();
+
+	static Config<BigInteger> bigIntegerConfig = Config.<BigInteger>builder()
+			.name("TEST_ENV_VAR_INTEGER")
+			.type(BigInteger.class)
+			.build();
+
+	static Config<BigDecimal> bigDecimalConfig = Config.<BigDecimal>builder()
+			.name("TEST_ENV_VAR_FLOAT")
+			.type(BigDecimal.class)
 			.build();
 
 	static Config<Boolean> booleanConfigTrue = Config.<Boolean>builder()
@@ -136,6 +151,16 @@ public class ConfigTest {
 				Config.<String>builder().name("UNKNOWN_VAR").type(String.class).build();
 		var e = assertThrows(IllegalArgumentException.class, config::getRequired);
 		assertEquals("No value for UNKNOWN_VAR", e.getMessage());
+	}
+
+	@Test
+	void shouldErrorIfParsingUnknownTypes() {
+		var config = Config.<Map>builder()
+				.name("TEST_ENV_VAR_INTEGER")
+				.type(Map.class)
+				.build();
+		var e = assertThrows(IllegalArgumentException.class, config::get);
+		assertEquals("Unable to parse value in TEST_ENV_VAR_INTEGER as type interface java.util.Map", e.getMessage());
 	}
 
 	@Test
