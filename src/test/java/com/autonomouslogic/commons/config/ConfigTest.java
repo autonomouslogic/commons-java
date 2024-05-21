@@ -18,6 +18,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -34,6 +36,18 @@ import org.junitpioneer.jupiter.SetEnvironmentVariable;
 @SetEnvironmentVariable(key = "TEST_ENV_VAR_PERIOD", value = "P7M5D")
 @SetEnvironmentVariable(key = "TEST_ENV_VAR_URI", value = "http://example.com/page")
 public class ConfigTest {
+	private static final String testFile = "/tmp/test-var-file-78676f75";
+
+	@BeforeEach
+	void setup() {
+		clearTestFile();
+	}
+
+	@AfterEach
+	void cleanup() {
+		clearTestFile();
+	}
+
 	@ParameterizedTest
 	@MethodSource("parseProvider")
 	void shouldReadOptionalValues(Config<?> config, Object expected) {
@@ -208,11 +222,9 @@ public class ConfigTest {
 
 	@Test
 	@SneakyThrows
-	@SetEnvironmentVariable(key = "TEST_VAR_FILE", value = "/tmp/test-var-file-78676f75")
+	@SetEnvironmentVariable(key = "TEST_VAR_FILE", value = testFile)
 	void shouldLoadVariablesFromFiles() {
-		var file = new File("/tmp/test-var-file-78676f75");
-		assertFalse(file.exists());
-		file.deleteOnExit();
+		var file = initTestFile();
 		FileUtils.write(file, "test-value\n", StandardCharsets.UTF_8);
 
 		var config =
@@ -222,7 +234,28 @@ public class ConfigTest {
 
 	@Test
 	@SneakyThrows
-	@SetEnvironmentVariable(key = "TEST_VAR_FILE", value = "/tmp/test-var-file-78676f75")
+	@SetEnvironmentVariable(key = "TEST_VAR_FILE", value = testFile)
+	void shouldLoadEmptyVariablesFromEmptyFiles() {
+		var file = initTestFile();
+		FileUtils.write(file, "", StandardCharsets.UTF_8);
+
+		var config =
+				Config.<String>builder().name("TEST_VAR").type(String.class).build();
+		assertEquals(Optional.empty(), config.get());
+	}
+
+	@Test
+	@SneakyThrows
+	@SetEnvironmentVariable(key = "TEST_VAR_FILE", value = "")
+	void shouldLoadEmptyVariablesFromEmptyFilePath() {
+		var config =
+				Config.<String>builder().name("TEST_VAR").type(String.class).build();
+		assertEquals(Optional.empty(), config.get());
+	}
+
+	@Test
+	@SneakyThrows
+	@SetEnvironmentVariable(key = "TEST_VAR_FILE", value = testFile)
 	@SetEnvironmentVariable(key = "TEST_VAR", value = "test-values")
 	void shouldErrorIfBothFileAndNonFileArePresent() {
 		var config =
@@ -233,12 +266,12 @@ public class ConfigTest {
 
 	@Test
 	@SneakyThrows
-	@SetEnvironmentVariable(key = "TEST_VAR_FILE", value = "/tmp/test-var-file-78676f75")
+	@SetEnvironmentVariable(key = "TEST_VAR_FILE", value = testFile)
 	void shouldErrorIfFileNotFound() {
 		var config =
 				Config.<String>builder().name("TEST_VAR").type(String.class).build();
 		var e = assertThrows(FileNotFoundException.class, config::get);
-		assertEquals("/tmp/test-var-file-78676f75", e.getMessage());
+		assertEquals(testFile, e.getMessage());
 	}
 
 	@Test
@@ -249,5 +282,19 @@ public class ConfigTest {
 				Config.<Integer>builder().name("TEST_VAR").type(Integer.class).build();
 		var e = assertThrows(IllegalArgumentException.class, config::get);
 		assertEquals("Unable to parse value in TEST_VAR as type class java.lang.Integer", e.getMessage());
+	}
+
+	private static File initTestFile() {
+		var file = new File(testFile);
+		assertFalse(file.exists());
+		file.deleteOnExit();
+		return file;
+	}
+
+	private static void clearTestFile() {
+		File file = new File(testFile);
+		if (file.exists()) {
+			file.delete();
+		}
 	}
 }
