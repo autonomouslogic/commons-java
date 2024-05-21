@@ -7,8 +7,10 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Optional;
+import lombok.NoArgsConstructor;
 
-public class DefaultConfigParsers {
+@NoArgsConstructor(access = lombok.AccessLevel.PRIVATE)
+public final class DefaultConfigParsers {
 	public static <T> Optional<ConfigParser<T>> getParser(Class<T> type) {
 		if (type == String.class) {
 			return Optional.of(type::cast);

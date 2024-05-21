@@ -284,6 +284,11 @@ public class ConfigTest {
 		assertEquals("Unable to parse value in TEST_VAR as type class java.lang.Integer", e.getMessage());
 	}
 
+	@Test
+	void shouldReturnName() {
+		assertEquals("TEST_ENV_VAR_STRING", stringConfig.getName());
+	}
+
 	private static File initTestFile() {
 		var file = new File(testFile);
 		assertFalse(file.exists());
