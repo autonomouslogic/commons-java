@@ -1,5 +1,17 @@
 Commons Java Changelog
 
+## [1.9.0](https://github.com/autonomouslogic/commons-java/compare/1.8.5...1.9.0) (2024-05-21)
+
+
+### Features
+
+* Config reading from environment variables ([#56](https://github.com/autonomouslogic/commons-java/issues/56)) ([2e52756](https://github.com/autonomouslogic/commons-java/commit/2e52756d3fcb20b845cd2a678756eb966973cdad))
+
+
+### Miscellaneous Chores
+
+* **deps:** update plugin io.github.gradle-nexus.publish-plugin to v2 ([#54](https://github.com/autonomouslogic/commons-java/issues/54)) ([ddfbeac](https://github.com/autonomouslogic/commons-java/commit/ddfbeacd8f7488938c89293b2cc76171ee9ec3d3))
+
 ## [1.8.5](https://github.com/autonomouslogic/commons-java/compare/1.8.4...1.8.5) (2024-05-06)
 
 
