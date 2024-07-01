@@ -1,5 +1,17 @@
 Commons Java Changelog
 
+## [1.9.1](https://github.com/autonomouslogic/commons-java/compare/1.9.0...1.9.1) (2024-07-01)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies to v5.10.3 ([#58](https://github.com/autonomouslogic/commons-java/issues/58)) ([2c69c04](https://github.com/autonomouslogic/commons-java/commit/2c69c04c26a3a48aec794b8cef81d79d65b19d63))
+
+
+### Miscellaneous Chores
+
+* **deps:** update all non-major dependencies ([#57](https://github.com/autonomouslogic/commons-java/issues/57)) ([c4a789b](https://github.com/autonomouslogic/commons-java/commit/c4a789b87ced42da4bca39af84d8a2c74366e0e3))
+
 ## [1.9.0](https://github.com/autonomouslogic/commons-java/compare/1.8.5...1.9.0) (2024-05-21)
 
 
