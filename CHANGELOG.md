@@ -1,5 +1,19 @@
 Commons Java Changelog
 
+## [1.9.2](https://github.com/autonomouslogic/commons-java/compare/1.9.1...1.9.2) (2024-11-04)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#62](https://github.com/autonomouslogic/commons-java/issues/62)) ([9cc7f9c](https://github.com/autonomouslogic/commons-java/commit/9cc7f9c70555929c7fd61838a592c790671cc9f6))
+
+
+### Miscellaneous Chores
+
+* **deps:** update all non-major dependencies ([#60](https://github.com/autonomouslogic/commons-java/issues/60)) ([0835c58](https://github.com/autonomouslogic/commons-java/commit/0835c584e824ef5f45ad532c0076753f762afd24))
+* **deps:** update all non-major dependencies ([#61](https://github.com/autonomouslogic/commons-java/issues/61)) ([88d6b4e](https://github.com/autonomouslogic/commons-java/commit/88d6b4ed1ce02561632e0213f50eb4a6db8fd639))
+* **deps:** update dependency gradle to v8.9 ([#59](https://github.com/autonomouslogic/commons-java/issues/59)) ([0c2bc23](https://github.com/autonomouslogic/commons-java/commit/0c2bc2336fbd757b053c202219f8ccdd9b1f10ee))
+
 ## [1.9.1](https://github.com/autonomouslogic/commons-java/compare/1.9.0...1.9.1) (2024-07-01)
 
 
