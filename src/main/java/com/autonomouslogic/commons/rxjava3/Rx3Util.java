@@ -35,22 +35,12 @@ public class Rx3Util {
 	 * Null return values will result in an error from RxJava, as those aren't allowed.
 	 * Use {@link #toMaybe(CompletionStage)} instead to handle null values properly.
 	 *
-	 * {@link Single#fromFuture(Future)} works in a blocking fashion, whereas {@link CompletionStage} can be utilised to avoid blocking calls.
-	 *
 	 * @param future the completion stage
 	 * @return the Single
 	 * @param <T> the return parameter of the future
 	 */
 	public static <T> Single<T> toSingle(CompletionStage<T> future) {
-		return Single.create(subscriber -> {
-			future.thenAccept(result -> {
-						subscriber.onSuccess(result);
-					})
-					.exceptionally(e -> {
-						subscriber.onError(e);
-						return null;
-					});
-		});
+		return Single.defer(() -> Single.fromFuture(future.toCompletableFuture()));
 	}
 
 	/**
@@ -58,26 +48,15 @@ public class Rx3Util {
 	 *
 	 * Null return values will result in an empty Maybe.
 	 *
-	 * {@link Maybe#fromFuture(Future)} works in a blocking fashion, whereas {@link CompletionStage} can be utilised to avoid blocking calls.
-	 *
 	 * @param future the completion stage
 	 * @return the Maybe
 	 * @param <T> the return parameter of the future
 	 */
 	public static <T> Maybe<T> toMaybe(CompletionStage<T> future) {
-		return Maybe.create(subscriber -> {
-			future.thenAccept(result -> {
-						if (result == null) {
-							subscriber.onComplete();
-						} else {
-							subscriber.onSuccess(result);
-						}
-					})
-					.exceptionally(e -> {
-						subscriber.onError(e);
-						return null;
-					});
-		});
+		return Maybe.defer(
+				() -> Maybe.fromFuture(future.toCompletableFuture())
+						.switchIfEmpty(Maybe.empty()) // Ensure empty Maybe for null values
+				);
 	}
 
 	/**
