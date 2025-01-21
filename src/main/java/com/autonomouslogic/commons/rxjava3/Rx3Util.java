@@ -44,30 +44,20 @@ public class Rx3Util {
 	 */
 	public static <T> Single<T> toSingle(CompletionStage<T> future) {
 		return Single.create(emitter -> {
-			// Efficiently handle completion
 			future.whenComplete((result, throwable) -> {
-				if (throwable != null) {
-					// Emit an error if a throwable is present
-					if (!emitter.isDisposed()) {
+				if (!emitter.isDisposed()) {
+					if (throwable != null) {
 						emitter.onError(throwable);
-					}
-				} else if (result != null) {
-					// Emit the result if not null
-					if (!emitter.isDisposed()) {
+					} else if (result != null) {
 						emitter.onSuccess(result);
-					}
-				} else {
-					// Single does not support null results; emit a NullPointerException
-					if (!emitter.isDisposed()) {
+					} else {
 						emitter.onError(new NullPointerException("CompletionStage completed with a null result"));
 					}
 				}
 			});
-			// Handle cancellation efficiently
 			emitter.setCancellable(() -> {
 				if (future instanceof CompletableFuture<?>) {
-					CompletableFuture<?> completableFuture = (CompletableFuture<?>) future;
-					completableFuture.cancel(false); // Avoid interruption unless necessary
+					((CompletableFuture<?>) future).cancel(false);
 				}
 			});
 		});
@@ -86,30 +76,20 @@ public class Rx3Util {
 	 */
 	public static <T> Maybe<T> toMaybe(CompletionStage<T> future) {
 		return Maybe.create(emitter -> {
-			// Efficiently handle completion
 			future.whenComplete((result, throwable) -> {
-				if (throwable != null) {
-					// Emit an error if a throwable is present
-					if (!emitter.isDisposed()) {
+				if (!emitter.isDisposed()) {
+					if (throwable != null) {
 						emitter.onError(throwable);
-					}
-				} else if (result != null) {
-					// Emit the result if not null
-					if (!emitter.isDisposed()) {
+					} else if (result != null) {
 						emitter.onSuccess(result);
-					}
-				} else {
-					// Complete the Maybe if result is null
-					if (!emitter.isDisposed()) {
+					} else {
 						emitter.onComplete();
 					}
 				}
 			});
-			// Handle cancellation efficiently
 			emitter.setCancellable(() -> {
 				if (future instanceof CompletableFuture<?>) {
-					CompletableFuture<?> completableFuture = (CompletableFuture<?>) future;
-					completableFuture.cancel(false); // Avoid interruption unless necessary
+					((CompletableFuture<?>) future).cancel(false);
 				}
 			});
 		});
