@@ -17,6 +17,7 @@ import io.reactivex.rxjava3.functions.Predicate;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +41,34 @@ public class Rx3Util {
 	 * @param <T> the return parameter of the future
 	 */
 	public static <T> Single<T> toSingle(CompletionStage<T> future) {
-		return Single.defer(() -> Single.fromFuture(future.toCompletableFuture()));
+		return Single.create(emitter -> {
+			// Efficiently handle completion
+			future.whenComplete((result, throwable) -> {
+				if (throwable != null) {
+					// Emit an error if a throwable is present
+					if (!emitter.isDisposed()) {
+						emitter.onError(throwable);
+					}
+				} else if (result != null) {
+					// Emit the result if not null
+					if (!emitter.isDisposed()) {
+						emitter.onSuccess(result);
+					}
+				} else {
+					// Single does not support null results; emit a NullPointerException
+					if (!emitter.isDisposed()) {
+						emitter.onError(new NullPointerException("CompletionStage completed with a null result"));
+					}
+				}
+			});
+			// Handle cancellation efficiently
+			emitter.setCancellable(() -> {
+				if (future instanceof CompletableFuture<?>) {
+					CompletableFuture<?> completableFuture = (CompletableFuture<?>) future;
+					completableFuture.cancel(false); // Avoid interruption unless necessary
+				}
+			});
+		});
 	}
 
 	/**
@@ -53,10 +81,34 @@ public class Rx3Util {
 	 * @param <T> the return parameter of the future
 	 */
 	public static <T> Maybe<T> toMaybe(CompletionStage<T> future) {
-		return Maybe.defer(
-				() -> Maybe.fromFuture(future.toCompletableFuture())
-						.switchIfEmpty(Maybe.empty()) // Ensure empty Maybe for null values
-				);
+		return Maybe.create(emitter -> {
+			// Efficiently handle completion
+			future.whenComplete((result, throwable) -> {
+				if (throwable != null) {
+					// Emit an error if a throwable is present
+					if (!emitter.isDisposed()) {
+						emitter.onError(throwable);
+					}
+				} else if (result != null) {
+					// Emit the result if not null
+					if (!emitter.isDisposed()) {
+						emitter.onSuccess(result);
+					}
+				} else {
+					// Complete the Maybe if result is null
+					if (!emitter.isDisposed()) {
+						emitter.onComplete();
+					}
+				}
+			});
+			// Handle cancellation efficiently
+			emitter.setCancellable(() -> {
+				if (future instanceof CompletableFuture<?>) {
+					CompletableFuture<?> completableFuture = (CompletableFuture<?>) future;
+					completableFuture.cancel(false); // Avoid interruption unless necessary
+				}
+			});
+		});
 	}
 
 	/**

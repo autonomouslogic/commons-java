@@ -41,7 +41,7 @@ class Rx3UtilTest {
 		var future = CompletableFuture.failedStage(textEx);
 		var single = Rx3Util.toSingle(future);
 		var ex = assertThrows(RuntimeException.class, single::blockingGet);
-		assertEquals("java.util.concurrent.ExecutionException: java.lang.RuntimeException: test error", ex.getMessage());
+		assertEquals("test error", ex.getMessage());
 	}
 
 	@Test
