@@ -104,14 +104,27 @@ public class Rx3Util {
 	 * @return the Completable
 	 */
 	public static Completable toCompletable(CompletionStage<Void> future) {
-		return Completable.create(subscriber -> {
-			future.thenAccept(ignore -> {
-						subscriber.onComplete();
-					})
-					.exceptionally(e -> {
-						subscriber.onError(e);
-						return null;
-					});
+		return Completable.create(emitter -> {
+			future.whenComplete((result, throwable) -> {
+				if (!emitter.isDisposed()) {
+					if (throwable != null) {
+						// Emit only the cause message
+						if (throwable.getCause() != null) {
+							emitter.onError(throwable.getCause());
+						} else {
+							emitter.onError(throwable);
+						}
+					} else {
+						emitter.onComplete();
+					}
+				}
+			});
+
+			emitter.setCancellable(() -> {
+				if (future instanceof CompletableFuture<?>) {
+					((CompletableFuture<?>) future).cancel(false);
+				}
+			});
 		});
 	}
 

@@ -76,12 +76,12 @@ class Rx3UtilTest {
 
 	@Test
 	void shouldCatchCompletionStageErrorsToCompletable() {
-		var future = CompletableFuture.supplyAsync((Supplier<Void>) () -> {
-			throw textEx;
+		var future = CompletableFuture.runAsync(() -> {
+			throw new RuntimeException("test error");
 		});
 		var completable = Rx3Util.toCompletable(future);
 		var ex = assertThrows(RuntimeException.class, completable::blockingAwait);
-		assertEquals("java.lang.RuntimeException: test error", ex.getMessage());
+		assertEquals("test error", ex.getMessage());
 	}
 
 	@Test
