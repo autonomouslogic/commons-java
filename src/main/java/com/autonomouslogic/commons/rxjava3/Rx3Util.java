@@ -36,6 +36,8 @@ public class Rx3Util {
 	 * Null return values will result in an error from RxJava, as those aren't allowed.
 	 * Use {@link #toMaybe(CompletionStage)} instead to handle null values properly.
 	 *
+	 * {@link Single#fromFuture(Future)} works in a blocking fashion, whereas {@link CompletionStage} can be utilised to avoid blocking calls.
+	 *
 	 * @param future the completion stage
 	 * @return the Single
 	 * @param <T> the return parameter of the future
@@ -76,6 +78,8 @@ public class Rx3Util {
 	 *
 	 * Null return values will result in an empty Maybe.
 	 *
+	 * {@link Maybe#fromFuture(Future)} works in a blocking fashion, whereas {@link CompletionStage} can be utilised to avoid blocking calls.
+	 * 
 	 * @param future the completion stage
 	 * @return the Maybe
 	 * @param <T> the return parameter of the future
