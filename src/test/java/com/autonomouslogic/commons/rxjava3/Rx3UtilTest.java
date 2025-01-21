@@ -41,7 +41,7 @@ class Rx3UtilTest {
 		var future = CompletableFuture.failedStage(textEx);
 		var single = Rx3Util.toSingle(future);
 		var ex = assertThrows(RuntimeException.class, single::blockingGet);
-		assertEquals("java.lang.RuntimeException: test error", ex.getMessage());
+		assertEquals("test error", ex.getMessage());
 	}
 
 	@Test
@@ -63,7 +63,7 @@ class Rx3UtilTest {
 		var future = CompletableFuture.failedStage(textEx);
 		var maybe = Rx3Util.toMaybe(future);
 		var ex = assertThrows(RuntimeException.class, maybe::blockingGet);
-		assertEquals("java.lang.RuntimeException: test error", ex.getMessage());
+		assertEquals("test error", ex.getMessage());
 	}
 
 	@Test
@@ -76,12 +76,12 @@ class Rx3UtilTest {
 
 	@Test
 	void shouldCatchCompletionStageErrorsToCompletable() {
-		var future = CompletableFuture.supplyAsync((Supplier<Void>) () -> {
+		var future = CompletableFuture.runAsync(() -> {
 			throw textEx;
 		});
 		var completable = Rx3Util.toCompletable(future);
 		var ex = assertThrows(RuntimeException.class, completable::blockingAwait);
-		assertEquals("java.lang.RuntimeException: test error", ex.getMessage());
+		assertEquals("test error", ex.getMessage());
 	}
 
 	@Test
