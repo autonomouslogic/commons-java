@@ -79,7 +79,7 @@ public class Rx3Util {
 	 * Null return values will result in an empty Maybe.
 	 *
 	 * {@link Maybe#fromFuture(Future)} works in a blocking fashion, whereas {@link CompletionStage} can be utilised to avoid blocking calls.
-	 * 
+	 *
 	 * @param future the completion stage
 	 * @return the Maybe
 	 * @param <T> the return parameter of the future
