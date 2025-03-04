@@ -1,5 +1,20 @@
 Commons Java Changelog
 
+## [1.9.4](https://github.com/autonomouslogic/commons-java/compare/1.9.3...1.9.4) (2025-03-04)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#72](https://github.com/autonomouslogic/commons-java/issues/72)) ([4098cf6](https://github.com/autonomouslogic/commons-java/commit/4098cf685ef21a7cb21fd73dcd4e165ac74b1ebb))
+
+
+### Miscellaneous Chores
+
+* **deps:** update all non-major dependencies ([#70](https://github.com/autonomouslogic/commons-java/issues/70)) ([aee60cc](https://github.com/autonomouslogic/commons-java/commit/aee60ccb97050f0252ff318c957a074378311ef3))
+* **deps:** update codecov/codecov-action action to v5 ([#63](https://github.com/autonomouslogic/commons-java/issues/63)) ([ec0ea46](https://github.com/autonomouslogic/commons-java/commit/ec0ea466cbd5e9398afeab40cd1cc4eb64b98c08))
+* **deps:** update plugin com.diffplug.spotless to v7 [skip release] ([#66](https://github.com/autonomouslogic/commons-java/issues/66)) ([c802a45](https://github.com/autonomouslogic/commons-java/commit/c802a45b4819e3f62bbcb7c0c3a5e2bffd1d00a6))
+* **deps:** update plugin io.freefair.lombok to v8.12.1 ([#71](https://github.com/autonomouslogic/commons-java/issues/71)) ([a6ed91d](https://github.com/autonomouslogic/commons-java/commit/a6ed91d5b98670aa4b1cd3edb8561e1946e95c9c))
+
 ## [1.9.3](https://github.com/autonomouslogic/commons-java/compare/1.9.2...1.9.3) (2025-01-06)
 
 
