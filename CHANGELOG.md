@@ -1,5 +1,17 @@
 Commons Java Changelog
 
+## [1.9.5](https://github.com/autonomouslogic/commons-java/compare/1.9.4...1.9.5) (2025-03-12)
+
+
+### Bug Fixes
+
+* Better exception handling in Rx3Util ([#68](https://github.com/autonomouslogic/commons-java/issues/68)) ([05e7364](https://github.com/autonomouslogic/commons-java/commit/05e73648911f8165e3377c055165e4774c5172b5))
+
+
+### Miscellaneous Chores
+
+* **deps:** update plugin org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin to v4 ([#69](https://github.com/autonomouslogic/commons-java/issues/69)) ([6cb1535](https://github.com/autonomouslogic/commons-java/commit/6cb1535e4e14b2ec6faa6068ffe745ac51c30738))
+
 ## [1.9.4](https://github.com/autonomouslogic/commons-java/compare/1.9.3...1.9.4) (2025-03-04)
 
 
