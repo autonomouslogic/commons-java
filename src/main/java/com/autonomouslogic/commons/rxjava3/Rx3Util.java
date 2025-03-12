@@ -17,7 +17,9 @@ import io.reactivex.rxjava3.functions.Predicate;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,14 +44,23 @@ public class Rx3Util {
 	 * @param <T> the return parameter of the future
 	 */
 	public static <T> Single<T> toSingle(CompletionStage<T> future) {
-		return Single.create(subscriber -> {
-			future.thenAccept(result -> {
-						subscriber.onSuccess(result);
-					})
-					.exceptionally(e -> {
-						subscriber.onError(e);
-						return null;
-					});
+		return Single.create(emitter -> {
+			future.whenComplete((result, throwable) -> {
+				if (!emitter.isDisposed()) {
+					if (throwable != null) {
+						emitter.onError(new ExecutionException(throwable));
+					} else if (result != null) {
+						emitter.onSuccess(result);
+					} else {
+						emitter.onError(new NullPointerException("CompletionStage completed with a null result"));
+					}
+				}
+			});
+			emitter.setCancellable(() -> {
+				if (future instanceof CompletableFuture<?>) {
+					((CompletableFuture<?>) future).cancel(false);
+				}
+			});
 		});
 	}
 
@@ -65,18 +76,23 @@ public class Rx3Util {
 	 * @param <T> the return parameter of the future
 	 */
 	public static <T> Maybe<T> toMaybe(CompletionStage<T> future) {
-		return Maybe.create(subscriber -> {
-			future.thenAccept(result -> {
-						if (result == null) {
-							subscriber.onComplete();
-						} else {
-							subscriber.onSuccess(result);
-						}
-					})
-					.exceptionally(e -> {
-						subscriber.onError(e);
-						return null;
-					});
+		return Maybe.create(emitter -> {
+			future.whenComplete((result, throwable) -> {
+				if (!emitter.isDisposed()) {
+					if (throwable != null) {
+						emitter.onError(new ExecutionException(throwable));
+					} else if (result != null) {
+						emitter.onSuccess(result);
+					} else {
+						emitter.onComplete();
+					}
+				}
+			});
+			emitter.setCancellable(() -> {
+				if (future instanceof CompletableFuture<?>) {
+					((CompletableFuture<?>) future).cancel(false);
+				}
+			});
 		});
 	}
 
@@ -89,14 +105,27 @@ public class Rx3Util {
 	 * @return the Completable
 	 */
 	public static Completable toCompletable(CompletionStage<Void> future) {
-		return Completable.create(subscriber -> {
-			future.thenAccept(ignore -> {
-						subscriber.onComplete();
-					})
-					.exceptionally(e -> {
-						subscriber.onError(e);
-						return null;
-					});
+		return Completable.create(emitter -> {
+			future.whenComplete((result, throwable) -> {
+				if (!emitter.isDisposed()) {
+					if (throwable != null) {
+						// Emit only the cause message
+						if (throwable.getCause() != null) {
+							emitter.onError(new ExecutionException(throwable));
+						} else {
+							emitter.onError(throwable);
+						}
+					} else {
+						emitter.onComplete();
+					}
+				}
+			});
+
+			emitter.setCancellable(() -> {
+				if (future instanceof CompletableFuture<?>) {
+					((CompletableFuture<?>) future).cancel(false);
+				}
+			});
 		});
 	}
 

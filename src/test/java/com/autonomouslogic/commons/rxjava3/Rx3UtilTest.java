@@ -5,10 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.FlowableTransformer;
+import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableTransformer;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subscribers.TestSubscriber;
 import java.time.Duration;
@@ -19,8 +23,11 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class Rx3UtilTest {
@@ -28,6 +35,21 @@ class Rx3UtilTest {
 	private static final FlowableTransformer<String, String> IDENTITY_FLOWABLE_TRANSFORMER = upstream -> upstream;
 
 	RuntimeException textEx = new RuntimeException("test error");
+
+	static final AtomicReference<Throwable> caughtError = new AtomicReference<>();
+
+	@BeforeAll
+	static void beforeAll() {
+		RxJavaPlugins.setErrorHandler(caughtError::set);
+	}
+
+	@BeforeEach
+	void setup() {
+		caughtError.set(null);
+	}
+
+	//////////////
+	// toSingle()
 
 	@Test
 	void shouldConvertCompletionStageToSingle() {
@@ -37,12 +59,45 @@ class Rx3UtilTest {
 	}
 
 	@Test
+	void confirmCatchSingleFromFuture() {
+		// This test confirms how RxJava's fromFuture works, so it can be replicated below
+		var future = CompletableFuture.failedFuture(textEx);
+		var single = Single.fromFuture(future);
+		var ex = assertThrows(RuntimeException.class, single::blockingGet);
+		ex.printStackTrace();
+		assertEquals(
+				"java.util.concurrent.ExecutionException: java.lang.RuntimeException: test error", ex.getMessage());
+
+		assertNull(caughtError.get());
+	}
+
+	@Test
 	void shouldCatchCompletionStageErrorsToSingle() {
-		var future = CompletableFuture.failedStage(textEx);
+		var future = CompletableFuture.failedFuture(textEx);
 		var single = Rx3Util.toSingle(future);
 		var ex = assertThrows(RuntimeException.class, single::blockingGet);
-		assertEquals("java.lang.RuntimeException: test error", ex.getMessage());
+		ex.printStackTrace();
+		assertEquals(
+				"java.util.concurrent.ExecutionException: java.lang.RuntimeException: test error", ex.getMessage());
+
+		assertNull(caughtError.get());
 	}
+
+	@Test
+	@SneakyThrows
+	void shouldCancelSingle() {
+		var future = delayedErrorFuture();
+		var single = Rx3Util.toSingle(future);
+		var disposable = single.subscribe();
+		disposable.dispose();
+		assertTrue(disposable.isDisposed());
+		assertTrue(future.isCancelled());
+		Thread.sleep(200);
+		assertNull(caughtError.get());
+	}
+
+	//////////////
+	// toMaybe()
 
 	@Test
 	void shouldConvertCompletionStageToMaybe() {
@@ -59,12 +114,44 @@ class Rx3UtilTest {
 	}
 
 	@Test
+	void confirmCatchMaybeFromFuture() {
+		// This test confirms how RxJava's fromFuture works, so it can be replicated below
+		var future = CompletableFuture.failedFuture(textEx);
+		var maybe = Maybe.fromFuture(future);
+		var ex = assertThrows(RuntimeException.class, maybe::blockingGet);
+		ex.printStackTrace();
+		assertEquals("test error", ex.getMessage());
+
+		assertNull(caughtError.get());
+	}
+
+	@Test
 	void shouldCatchCompletionStageErrorsToMaybe() {
-		var future = CompletableFuture.failedStage(textEx);
+		var future = CompletableFuture.failedFuture(textEx);
 		var maybe = Rx3Util.toMaybe(future);
 		var ex = assertThrows(RuntimeException.class, maybe::blockingGet);
-		assertEquals("java.lang.RuntimeException: test error", ex.getMessage());
+		ex.printStackTrace();
+		assertEquals(
+				"java.util.concurrent.ExecutionException: java.lang.RuntimeException: test error", ex.getMessage());
+
+		assertNull(caughtError.get());
 	}
+
+	@Test
+	@SneakyThrows
+	void shouldCancelMaybe() {
+		var future = delayedErrorFuture();
+		var maybe = Rx3Util.toMaybe(future);
+		var disposable = maybe.subscribe();
+		disposable.dispose();
+		assertTrue(disposable.isDisposed());
+		assertTrue(future.isCancelled());
+		Thread.sleep(200);
+		assertNull(caughtError.get());
+	}
+
+	//////////////
+	// toCompletable()
 
 	@Test
 	void shouldConvertCompletionStageToCompletable() {
@@ -75,14 +162,50 @@ class Rx3UtilTest {
 	}
 
 	@Test
+	void confirmCatchCompletableFromFuture() {
+		// This test confirms how RxJava's fromFuture works, so it can be replicated below
+		var future = CompletableFuture.runAsync(() -> {
+			throw textEx;
+		});
+		var completable = Completable.fromFuture(future);
+		var ex = assertThrows(RuntimeException.class, completable::blockingAwait);
+		ex.printStackTrace();
+		assertEquals(
+				"java.util.concurrent.ExecutionException: java.lang.RuntimeException: test error", ex.getMessage());
+
+		assertNull(caughtError.get());
+	}
+
+	@Test
 	void shouldCatchCompletionStageErrorsToCompletable() {
-		var future = CompletableFuture.supplyAsync((Supplier<Void>) () -> {
+		var future = CompletableFuture.runAsync(() -> {
 			throw textEx;
 		});
 		var completable = Rx3Util.toCompletable(future);
 		var ex = assertThrows(RuntimeException.class, completable::blockingAwait);
-		assertEquals("java.lang.RuntimeException: test error", ex.getMessage());
+		ex.printStackTrace();
+		assertEquals(
+				"java.util.concurrent.ExecutionException: java.util.concurrent.CompletionException: java.lang.RuntimeException: test error",
+				ex.getMessage());
+
+		assertNull(caughtError.get());
 	}
+
+	@Test
+	@SneakyThrows
+	void shouldCancelCompletable() {
+		var future = delayedErrorFuture();
+		var completable = Rx3Util.toCompletable(future);
+		var disposable = completable.subscribe();
+		disposable.dispose();
+		assertTrue(disposable.isDisposed());
+		assertTrue(future.isCancelled());
+		Thread.sleep(200);
+		assertNull(caughtError.get());
+	}
+
+	//////////////
+	// wrapTransformerErrors()
 
 	@Test
 	void shouldWrapObservableTransformerErrors() {
@@ -180,6 +303,9 @@ class Rx3UtilTest {
 		assertEquals("result", result);
 	}
 
+	//////////////
+	// Others
+
 	@Test
 	@SneakyThrows
 	void shouldZipAll() {
@@ -241,8 +367,9 @@ class Rx3UtilTest {
 		var result = Flowable.fromIterable(ints)
 				.compose(Rx3Util.checkOrder(Integer::compareTo))
 				.toList();
-		var e = assertThrows(RuntimeException.class, () -> result.blockingGet());
-		assertEquals("Stream isn't ordered - last: 5, current: 4", e.getMessage());
+		var ex = assertThrows(RuntimeException.class, () -> result.blockingGet());
+		ex.printStackTrace();
+		assertEquals("Stream isn't ordered - last: 5, current: 4", ex.getMessage());
 	}
 
 	@Test
@@ -281,12 +408,27 @@ class Rx3UtilTest {
 				.compose(Rx3Util.retryWithDelayFlowable(
 						100, Duration.ofSeconds(1), e -> !e.getMessage().equals("test error 2")))
 				.blockingFirst();
-		var e = assertThrows(RuntimeException.class, func::get);
-		assertEquals("test error 2", e.getMessage());
+		var ex = assertThrows(RuntimeException.class, func::get);
+		ex.printStackTrace();
+		assertEquals("test error 2", ex.getMessage());
 		assertEquals(3, count.get());
 		assertEquals(3, times.size());
 		for (int j = 0; j < 2; j++) {
 			assertEquals(1000, Duration.between(times.get(j), times.get(j + 1)).toMillis(), 100);
 		}
+	}
+
+	//////////////
+	// Utils
+
+	private static CompletableFuture<Void> delayedErrorFuture() {
+		return CompletableFuture.runAsync(() -> {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+			throw new RuntimeException("delayed error");
+		});
 	}
 }
