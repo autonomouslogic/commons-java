@@ -1,5 +1,17 @@
 Commons Java Changelog
 
+## [1.9.10](https://github.com/autonomouslogic/commons-java/compare/1.9.9...1.9.10) (2025-08-04)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#80](https://github.com/autonomouslogic/commons-java/issues/80)) ([5a8de00](https://github.com/autonomouslogic/commons-java/commit/5a8de00b4e26f6c13dc39a4b8c78730f536007a2))
+
+
+### Miscellaneous Chores
+
+* **deps:** update plugin com.diffplug.spotless to v7.1.0 ([#78](https://github.com/autonomouslogic/commons-java/issues/78)) ([97ec413](https://github.com/autonomouslogic/commons-java/commit/97ec413e9e149050ef785bc2370843fc7e196db8))
+
 ## [1.9.9](https://github.com/autonomouslogic/commons-java/compare/1.9.8...1.9.9) (2025-07-07)
 
 
