@@ -3,7 +3,7 @@ plugins {
 	id "idea"
 	id "application"
 	id "jacoco"
-	id "io.freefair.lombok" version "8.14"
+	id "io.freefair.lombok" version "8.14.2"
 	id "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin" version "4.0.2"
 	id "com.diffplug.spotless" version "7.2.1"
 	id "maven-publish"
@@ -31,7 +31,7 @@ dependencies {
 
 	compileOnly "io.reactivex.rxjava3:rxjava:3.1.11"
 
-	testImplementation "org.mockito:mockito-core:5.18.0"
+	testImplementation "org.mockito:mockito-core:5.19.0"
 	testImplementation "org.junit.jupiter:junit-jupiter-api:5.13.4"
 	testImplementation "org.junit.jupiter:junit-jupiter-params:5.13.4"
 	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.13.4"
