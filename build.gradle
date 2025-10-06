@@ -26,17 +26,17 @@ repositories {
 }
 
 dependencies {
-	implementation "com.google.guava:guava:33.4.8-jre"
+	implementation "com.google.guava:guava:33.5.0-jre"
 	//implementation "com.diffplug.durian:durian:3.4.0"
 
-	compileOnly "io.reactivex.rxjava3:rxjava:3.1.11"
+	compileOnly "io.reactivex.rxjava3:rxjava:3.1.12"
 
-	testImplementation "org.mockito:mockito-core:5.19.0"
-	testImplementation "org.junit.jupiter:junit-jupiter-api:5.13.4"
-	testImplementation "org.junit.jupiter:junit-jupiter-params:5.13.4"
-	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.13.4"
+	testImplementation "org.mockito:mockito-core:5.20.0"
+	testImplementation "org.junit.jupiter:junit-jupiter-api:5.14.0"
+	testImplementation "org.junit.jupiter:junit-jupiter-params:5.14.0"
+	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.14.0"
 	testImplementation "commons-io:commons-io:2.20.0"
-	testImplementation "io.reactivex.rxjava3:rxjava:3.1.11"
+	testImplementation "io.reactivex.rxjava3:rxjava:3.1.12"
 	testImplementation "org.junit-pioneer:junit-pioneer:2.3.0"
 }
 
