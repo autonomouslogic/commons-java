@@ -1,5 +1,12 @@
 Commons Java Changelog
 
+## [1.9.13](https://github.com/autonomouslogic/commons-java/compare/1.9.12...1.9.13) (2025-11-03)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies to v5.14.1 ([#91](https://github.com/autonomouslogic/commons-java/issues/91)) ([585cfe1](https://github.com/autonomouslogic/commons-java/commit/585cfe1de3e02204827b712878d6f185fbbaf198))
+
 ## [1.9.12](https://github.com/autonomouslogic/commons-java/compare/1.9.11...1.9.12) (2025-10-06)
 
 
