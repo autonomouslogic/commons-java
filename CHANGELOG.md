@@ -1,5 +1,12 @@
 Commons Java Changelog
 
+## [1.9.14](https://github.com/autonomouslogic/commons-java/compare/1.9.13...1.9.14) (2025-12-01)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#93](https://github.com/autonomouslogic/commons-java/issues/93)) ([9333afa](https://github.com/autonomouslogic/commons-java/commit/9333afa8c53fe21f918f297830c2c19cf430522c))
+
 ## [1.9.13](https://github.com/autonomouslogic/commons-java/compare/1.9.12...1.9.13) (2025-11-03)
 
 
