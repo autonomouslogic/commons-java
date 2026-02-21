@@ -3,7 +3,7 @@ plugins {
 	id "idea"
 	id "application"
 	id "jacoco"
-	id "io.freefair.lombok" version "8.14.4"
+	id "io.freefair.lombok" version "9.2.0"
 	id "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin" version "4.0.2"
 	id "com.diffplug.spotless" version "7.2.1"
 	id "maven-publish"
