@@ -1,5 +1,12 @@
 Commons Java Changelog
 
+## [1.9.18](https://github.com/autonomouslogic/commons-java/compare/1.9.17...1.9.18) (2026-04-06)
+
+
+### Bug Fixes
+
+* **deps:** update dependency org.mockito:mockito-core to v5.23.0 ([#98](https://github.com/autonomouslogic/commons-java/issues/98)) ([0741e50](https://github.com/autonomouslogic/commons-java/commit/0741e50f330c1c878901cb720bd9f498cb18ec90))
+
 ## [1.9.17](https://github.com/autonomouslogic/commons-java/compare/1.9.16...1.9.17) (2026-03-02)
 
 
