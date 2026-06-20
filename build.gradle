@@ -17,8 +17,8 @@ group "com.autonomouslogic.commons"
 java {
 	withJavadocJar()
 	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_11
-	targetCompatibility = JavaVersion.VERSION_11
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
@@ -42,6 +42,11 @@ dependencies {
 
 test {
 	useJUnitPlatform()
+
+	jvmArgs = [
+		"--add-opens", "java.base/java.lang=ALL-UNNAMED",
+		"--add-opens", "java.base/java.util=ALL-UNNAMED"
+	]
 
 	testLogging {
 		events = [ "FAILED", "PASSED", "SKIPPED" ]
