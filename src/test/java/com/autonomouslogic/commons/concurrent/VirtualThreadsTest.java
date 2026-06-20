@@ -126,6 +126,19 @@ class VirtualThreadsTest {
 				assertEquals(i, results.get(i));
 			}
 		}
+
+		@Test
+		void shouldWrapInputs() throws Exception {
+			var inputs = IntStream.range(0, 10).boxed();
+
+			var results = VirtualThreads.callAll(inputs, i -> i * 2, 5);
+
+			assertNotNull(results);
+			assertEquals(10, results.size());
+			for (var i = 0; i < 10; i++) {
+				assertEquals(i * 2, results.get(i));
+			}
+		}
 	}
 
 	@Nested
@@ -227,7 +240,8 @@ class VirtualThreadsTest {
 					"Expected at most concurrency + 1 tasks to run, but " + tasksRun.get() + " tasks ran");
 		}
 
-		private static void testGeneric(int taskCount, int concurrency) throws InterruptedException, ExecutionException {
+		private static void testGeneric(int taskCount, int concurrency)
+				throws InterruptedException, ExecutionException {
 			var tasksRun = new AtomicInteger();
 
 			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> tasksRun.incrementAndGet());
@@ -235,6 +249,16 @@ class VirtualThreadsTest {
 			VirtualThreads.runAll(tasks, concurrency);
 
 			assertEquals(taskCount, tasksRun.get());
+		}
+
+		@Test
+		void shouldWrapInputs() throws Exception {
+			var inputs = IntStream.range(0, 10).boxed();
+			var processed = new AtomicInteger();
+
+			VirtualThreads.runAll(inputs, i -> processed.incrementAndGet(), 5);
+
+			assertEquals(10, processed.get());
 		}
 	}
 }

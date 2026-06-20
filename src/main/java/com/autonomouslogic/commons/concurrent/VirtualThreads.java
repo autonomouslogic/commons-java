@@ -7,6 +7,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.NonNull;
 
@@ -85,6 +87,27 @@ public class VirtualThreads {
 				inFlight--;
 			}
 		}
+	}
+
+	/**
+	 * Executes an action on each input with bounded concurrency.
+	 * Results are returned in submission order.
+	 * Fail-fast: first action failure cancels remaining actions and propagates.
+	 * This method is blocking.
+	 */
+	public static <T, R> List<R> callAll(@NonNull Stream<T> inputs, @NonNull Function<T, R> fn, int maxConcurrency)
+			throws InterruptedException, ExecutionException {
+		return callAll(inputs.map(input -> (Callable<R>) () -> fn.apply(input)), maxConcurrency);
+	}
+
+	/**
+	 * Executes an action on each input with bounded concurrency.
+	 * Fail-fast: first action failure cancels remaining actions and propagates.
+	 * This method is blocking.
+	 */
+	public static <T> void runAll(@NonNull Stream<T> inputs, @NonNull Consumer<T> action, int maxConcurrency)
+			throws InterruptedException, ExecutionException {
+		runAll(inputs.map(input -> (Runnable) () -> action.accept(input)), maxConcurrency);
 	}
 
 	private static class Result<T> {
