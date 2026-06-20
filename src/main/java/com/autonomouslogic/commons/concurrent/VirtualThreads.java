@@ -11,9 +11,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import lombok.NonNull;
 
 public class VirtualThreads {
+	/**
+	 * Executes tasks on virtual threads with bounded concurrency.
+	 * Returns results in submission order.
+	 * Fail-fast: first task failure cancels remaining tasks and propagates.
+	 * This method is blocking.
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> List<T> callAll(@NonNull Iterable<? extends Callable<T>> tasks, int maxConcurrency)
+			throws InterruptedException, ExecutionException {
+		return callAll(
+				(Stream<Callable<T>>) (Stream<?>) StreamSupport.stream(tasks.spliterator(), false), maxConcurrency);
+	}
+
 	/**
 	 * Executes tasks on virtual threads with bounded concurrency.
 	 * Returns results in submission order.
@@ -89,6 +103,17 @@ public class VirtualThreads {
 	 * Fail-fast: first task failure cancels remaining tasks and propagates.
 	 * This method is blocking.
 	 */
+	@SuppressWarnings("unchecked")
+	public static void runAll(@NonNull Iterable<? extends Runnable> tasks, int maxConcurrency)
+			throws InterruptedException, ExecutionException {
+		runAll((Stream<Runnable>) (Stream<?>) StreamSupport.stream(tasks.spliterator(), false), maxConcurrency);
+	}
+
+	/**
+	 * Executes tasks on virtual threads with bounded concurrency.
+	 * Fail-fast: first task failure cancels remaining tasks and propagates.
+	 * This method is blocking.
+	 */
 	public static void runAll(@NonNull Stream<Runnable> tasks, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
 		if (maxConcurrency <= 0) {
@@ -150,9 +175,34 @@ public class VirtualThreads {
 	 * Fail-fast: first action failure cancels remaining actions and propagates.
 	 * This method is blocking.
 	 */
+	public static <T, R> List<R> callAll(@NonNull Iterable<T> inputs, @NonNull Function<T, R> fn, int maxConcurrency)
+			throws InterruptedException, ExecutionException {
+		return callAll(
+				StreamSupport.stream(inputs.spliterator(), false).map(input -> (Callable<R>) () -> fn.apply(input)),
+				maxConcurrency);
+	}
+
+	/**
+	 * Executes an action on each input with bounded concurrency.
+	 * Results are returned in submission order.
+	 * Fail-fast: first action failure cancels remaining actions and propagates.
+	 * This method is blocking.
+	 */
 	public static <T, R> List<R> callAll(@NonNull Stream<T> inputs, @NonNull Function<T, R> fn, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
 		return callAll(inputs.map(input -> (Callable<R>) () -> fn.apply(input)), maxConcurrency);
+	}
+
+	/**
+	 * Executes an action on each input with bounded concurrency.
+	 * Fail-fast: first action failure cancels remaining actions and propagates.
+	 * This method is blocking.
+	 */
+	public static <T> void runAll(@NonNull Iterable<T> inputs, @NonNull Consumer<T> action, int maxConcurrency)
+			throws InterruptedException, ExecutionException {
+		runAll(
+				StreamSupport.stream(inputs.spliterator(), false).map(input -> (Runnable) () -> action.accept(input)),
+				maxConcurrency);
 	}
 
 	/**

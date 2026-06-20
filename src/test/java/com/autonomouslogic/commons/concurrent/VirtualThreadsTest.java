@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -162,6 +164,23 @@ class VirtualThreadsTest {
 			assertTrue(streamClosed.get());
 		}
 
+		@Test
+		void shouldHandleIterableOfCallables() throws Exception {
+			var tasks = new ArrayList<Callable<Integer>>();
+			for (int i = 0; i < 10; i++) {
+				int index = i;
+				tasks.add(() -> index);
+			}
+
+			var results = VirtualThreads.callAll(tasks, 5);
+
+			assertNotNull(results);
+			assertEquals(10, results.size());
+			for (int i = 0; i < 10; i++) {
+				assertEquals(i, results.get(i));
+			}
+		}
+
 		private static <T> Stream<T> trackableCallableStream(Stream<T> source, AtomicBoolean closed) {
 			return source.onClose(() -> closed.set(true));
 		}
@@ -311,8 +330,46 @@ class VirtualThreadsTest {
 			assertTrue(streamClosed.get());
 		}
 
+		@Test
+		void shouldHandleIterableOfRunnables() throws Exception {
+			var tasksRun = new AtomicInteger();
+			var tasks = new ArrayList<Runnable>();
+			for (int i = 0; i < 10; i++) {
+				tasks.add(tasksRun::incrementAndGet);
+			}
+
+			VirtualThreads.runAll(tasks, 5);
+
+			assertEquals(10, tasksRun.get());
+		}
+
 		private static <T> Stream<T> trackableRunnableStream(Stream<T> source, AtomicBoolean closed) {
 			return source.onClose(() -> closed.set(true));
+		}
+	}
+
+	@Nested
+	class IterableOverloadTests {
+		@Test
+		void shouldCallAllWithIterableAndFunction() throws Exception {
+			var inputs = List.of(1, 2, 3, 4, 5);
+
+			var results = VirtualThreads.callAll(inputs, i -> i * 2, 3);
+
+			assertNotNull(results);
+			assertEquals(5, results.size());
+			assertEquals(2, results.get(0));
+			assertEquals(10, results.get(4));
+		}
+
+		@Test
+		void shouldRunAllWithIterableAndConsumer() throws Exception {
+			var processed = new AtomicInteger();
+			var inputs = List.of(1, 2, 3, 4, 5);
+
+			VirtualThreads.runAll(inputs, i -> processed.incrementAndGet(), 3);
+
+			assertEquals(5, processed.get());
 		}
 	}
 }
