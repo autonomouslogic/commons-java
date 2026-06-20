@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -60,6 +61,13 @@ public class VirtualThreads {
 					}
 				} catch (InterruptedException e) {
 					executor.shutdownNow();
+
+					try {
+						executor.awaitTermination(5, TimeUnit.SECONDS);
+					} catch (InterruptedException suppressed) {
+						e.addSuppressed(suppressed);
+					}
+
 					Thread.currentThread().interrupt();
 					throw e;
 				}
@@ -105,6 +113,13 @@ public class VirtualThreads {
 					}
 				} catch (InterruptedException e) {
 					executor.shutdownNow();
+
+					try {
+						executor.awaitTermination(5, TimeUnit.SECONDS);
+					} catch (InterruptedException suppressed) {
+						e.addSuppressed(suppressed);
+					}
+
 					Thread.currentThread().interrupt();
 					throw e;
 				}
