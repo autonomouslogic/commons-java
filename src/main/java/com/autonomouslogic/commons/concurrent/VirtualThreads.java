@@ -44,12 +44,23 @@ public class VirtualThreads {
 				if (inFlight == 0) {
 					break;
 				}
-				var finished = completion.take();
-				var result = finished.get();
-				inFlight--;
-				completed.put(result.index, result.value);
-				while (completed.containsKey(results.size())) {
-					results.add(completed.remove(results.size()));
+				try {
+					var finished = completion.take();
+					try {
+						var result = finished.get();
+						inFlight--;
+						completed.put(result.index, result.value);
+						while (completed.containsKey(results.size())) {
+							results.add(completed.remove(results.size()));
+						}
+					} catch (ExecutionException e) {
+						executor.shutdownNow();
+						throw e;
+					}
+				} catch (InterruptedException e) {
+					executor.shutdownNow();
+					Thread.currentThread().interrupt();
+					throw e;
 				}
 			}
 			return results;
@@ -82,8 +93,19 @@ public class VirtualThreads {
 				if (inFlight == 0) {
 					break;
 				}
-				var finished = completion.take();
-				finished.get();
+				try {
+					var finished = completion.take();
+					try {
+						finished.get();
+					} catch (ExecutionException e) {
+						executor.shutdownNow();
+						throw e;
+					}
+				} catch (InterruptedException e) {
+					executor.shutdownNow();
+					Thread.currentThread().interrupt();
+					throw e;
+				}
 				inFlight--;
 			}
 		}
