@@ -11,8 +11,8 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          distribution: adopt
-          java-version: 11
+          distribution: temurin
+          java-version: 21
           cache: gradle
 
       - name: Spotless
