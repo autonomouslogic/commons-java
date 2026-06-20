@@ -137,15 +137,7 @@ class VirtualThreadsTest {
 
 		@Test
 		void shouldExecuteAllTasks() throws Exception {
-			var taskCount = 50;
-			var concurrency = 5;
-			var tasksRun = new AtomicInteger();
-
-			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> tasksRun.incrementAndGet());
-
-			VirtualThreads.runAll(tasks, concurrency);
-
-			assertEquals(taskCount, tasksRun.get());
+			testGeneric(50, 5);
 		}
 
 		@Test
@@ -200,27 +192,12 @@ class VirtualThreadsTest {
 
 		@Test
 		void shouldExecuteAllTasksWithHighConcurrencyAndFewTasks() throws Exception {
-			var taskCount = 5;
-			var concurrency = 50;
-			var tasksRun = new AtomicInteger();
-
-			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> tasksRun.incrementAndGet());
-
-			VirtualThreads.runAll(tasks, concurrency);
-
-			assertEquals(taskCount, tasksRun.get());
+			testGeneric(5, 50);
 		}
 
 		@Test
 		void shouldHandleConcurrencyLimitOfOne() throws Exception {
-			var taskCount = 5;
-			var tasksRun = new AtomicInteger();
-
-			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> tasksRun.incrementAndGet());
-
-			VirtualThreads.runAll(tasks, 1);
-
-			assertEquals(taskCount, tasksRun.get());
+			testGeneric(5, 1);
 		}
 
 		@Test
@@ -248,6 +225,16 @@ class VirtualThreadsTest {
 			assertTrue(
 					tasksRun.get() <= concurrency + 1,
 					"Expected at most concurrency + 1 tasks to run, but " + tasksRun.get() + " tasks ran");
+		}
+
+		private static void testGeneric(int taskCount, int concurrency) throws InterruptedException, ExecutionException {
+			var tasksRun = new AtomicInteger();
+
+			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> tasksRun.incrementAndGet());
+
+			VirtualThreads.runAll(tasks, concurrency);
+
+			assertEquals(taskCount, tasksRun.get());
 		}
 	}
 }
