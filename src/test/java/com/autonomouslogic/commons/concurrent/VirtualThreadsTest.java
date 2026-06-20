@@ -131,19 +131,6 @@ class VirtualThreadsTest {
 		}
 
 		@Test
-		void shouldWrapInputs() throws Exception {
-			var inputs = IntStream.range(0, 10).boxed();
-
-			var results = VirtualThreads.callAll(inputs, i -> i * 2, 5);
-
-			assertNotNull(results);
-			assertEquals(10, results.size());
-			for (var i = 0; i < 10; i++) {
-				assertEquals(i * 2, results.get(i));
-			}
-		}
-
-		@Test
 		void shouldCloseStreamOnTaskFailure() throws Exception {
 			var streamClosed = new AtomicBoolean(false);
 			var taskCount = 100;
@@ -297,16 +284,6 @@ class VirtualThreadsTest {
 		}
 
 		@Test
-		void shouldWrapInputs() throws Exception {
-			var inputs = IntStream.range(0, 10).boxed();
-			var processed = new AtomicInteger();
-
-			VirtualThreads.runAll(inputs, i -> processed.incrementAndGet(), 5);
-
-			assertEquals(10, processed.get());
-		}
-
-		@Test
 		void shouldCloseStreamOnTaskFailure() throws Exception {
 			var streamClosed = new AtomicBoolean(false);
 			var taskCount = 100;
@@ -349,9 +326,22 @@ class VirtualThreadsTest {
 	}
 
 	@Nested
-	class IterableOverloadTests {
+	class CallAllWithFunctionTests {
 		@Test
-		void shouldCallAllWithIterableAndFunction() throws Exception {
+		void shouldTransformInputsUsingStream() throws Exception {
+			var inputs = IntStream.range(0, 10).boxed();
+
+			var results = VirtualThreads.callAll(inputs, i -> i * 2, 5);
+
+			assertNotNull(results);
+			assertEquals(10, results.size());
+			for (var i = 0; i < 10; i++) {
+				assertEquals(i * 2, results.get(i));
+			}
+		}
+
+		@Test
+		void shouldTransformInputsUsingIterable() throws Exception {
 			var inputs = List.of(1, 2, 3, 4, 5);
 
 			var results = VirtualThreads.callAll(inputs, i -> i * 2, 3);
@@ -361,9 +351,22 @@ class VirtualThreadsTest {
 			assertEquals(2, results.get(0));
 			assertEquals(10, results.get(4));
 		}
+	}
+
+	@Nested
+	class RunAllWithConsumerTests {
+		@Test
+		void shouldProcessInputsUsingStream() throws Exception {
+			var inputs = IntStream.range(0, 10).boxed();
+			var processed = new AtomicInteger();
+
+			VirtualThreads.runAll(inputs, i -> processed.incrementAndGet(), 5);
+
+			assertEquals(10, processed.get());
+		}
 
 		@Test
-		void shouldRunAllWithIterableAndConsumer() throws Exception {
+		void shouldProcessInputsUsingIterable() throws Exception {
 			var processed = new AtomicInteger();
 			var inputs = List.of(1, 2, 3, 4, 5);
 
