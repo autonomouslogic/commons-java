@@ -17,7 +17,7 @@ public class VirtualThreads {
 	 * Fail-fast: first task failure cancels remaining tasks and propagates.
 	 * This method is blocking.
 	 */
-	public static <T> List<T> runAll(@NonNull Stream<Callable<T>> tasks, int maxConcurrency)
+	public static <T> List<T> callAll(@NonNull Stream<Callable<T>> tasks, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
 		if (maxConcurrency <= 0) {
 			throw new IllegalArgumentException("maxConcurrency must be > 0");
@@ -51,6 +51,39 @@ public class VirtualThreads {
 				}
 			}
 			return results;
+		}
+	}
+
+	/**
+	 * Executes tasks on virtual threads with bounded concurrency.
+	 * Fail-fast: first task failure cancels remaining tasks and propagates.
+	 * This method is blocking.
+	 */
+	public static void runAll(@NonNull Stream<Runnable> tasks, int maxConcurrency)
+			throws InterruptedException, ExecutionException {
+		if (maxConcurrency <= 0) {
+			throw new IllegalArgumentException("maxConcurrency must be > 0");
+		}
+		var iterator = tasks.iterator();
+		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+			var completion = new ExecutorCompletionService<Void>(executor);
+			int inFlight = 0;
+			while (iterator.hasNext() || inFlight > 0) {
+				while (inFlight < maxConcurrency && iterator.hasNext()) {
+					var task = iterator.next();
+					completion.submit(() -> {
+						task.run();
+						return null;
+					});
+					inFlight++;
+				}
+				if (inFlight == 0) {
+					break;
+				}
+				var finished = completion.take();
+				finished.get();
+				inFlight--;
+			}
 		}
 	}
 

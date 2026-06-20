@@ -11,115 +11,243 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class VirtualThreadsTest {
-	@Test
-	void shouldHandleSingleTask() throws Exception {
-		var results = VirtualThreads.runAll(Stream.of((Callable<String>) () -> "single-result"), 1);
+	@Nested
+	class CallAllTests {
+		@Test
+		void shouldHandleSingleTask() throws Exception {
+			var results = VirtualThreads.callAll(Stream.of((Callable<String>) () -> "single-result"), 1);
 
-		assertNotNull(results);
-		assertEquals(1, results.size());
-		assertEquals("single-result", results.get(0));
-	}
+			assertNotNull(results);
+			assertEquals(1, results.size());
+			assertEquals("single-result", results.get(0));
+		}
 
-	@Test
-	void shouldExecuteAllTasksAndReturnResultsInOrder() throws Exception {
-		testGeneric(50, 5);
-	}
+		@Test
+		void shouldExecuteAllTasksAndReturnResultsInOrder() throws Exception {
+			testGeneric(50, 5);
+		}
 
-	@Test
-	void shouldMaintainOrderWithLongTasks() throws Exception {
-		var rng = SecureRandom.getInstanceStrong();
-		var taskCount = 50;
-		var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Callable<Integer>) () -> {
-			Thread.sleep(rng.nextInt(200) + 200);
-			return i;
-		});
+		@Test
+		void shouldMaintainOrderWithLongTasks() throws Exception {
+			var rng = SecureRandom.getInstanceStrong();
+			var taskCount = 50;
+			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Callable<Integer>) () -> {
+				Thread.sleep(rng.nextInt(200) + 200);
+				return i;
+			});
 
-		var results = VirtualThreads.runAll(tasks, 5);
+			var results = VirtualThreads.callAll(tasks, 5);
 
-		assertNotNull(results);
-		assertEquals(taskCount, results.size());
-		for (var i = 0; i < taskCount; i++) {
-			assertEquals(i, results.get(i));
+			assertNotNull(results);
+			assertEquals(taskCount, results.size());
+			for (var i = 0; i < taskCount; i++) {
+				assertEquals(i, results.get(i));
+			}
+		}
+
+		@Test
+		void shouldMaintainMaxConcurrency() throws Exception {
+			var taskCount = 50;
+			var concurrency = 5;
+			var currentConcurrency = new AtomicInteger();
+			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Callable<Integer>) () -> {
+				var c = currentConcurrency.incrementAndGet();
+				if (i >= taskCount && i < (taskCount - concurrency)) {
+					assertEquals(concurrency, c);
+				}
+				Thread.sleep(100);
+				return i;
+			});
+
+			var results = VirtualThreads.callAll(tasks, concurrency);
+
+			assertNotNull(results);
+			assertEquals(taskCount, results.size());
+			for (var i = 0; i < taskCount; i++) {
+				assertEquals(i, results.get(i));
+			}
+		}
+
+		@Test
+		void shouldHandleEmptyStream() throws Exception {
+			var results = VirtualThreads.callAll(Stream.empty(), 5);
+
+			assertNotNull(results);
+			assertTrue(results.isEmpty());
+		}
+
+		@Test
+		void shouldHandleHighConcurrencyWithFewTasks() throws Exception {
+			testGeneric(5, 50);
+		}
+
+		@Test
+		void shouldHandleConcurrencyLimitOfOne() throws Exception {
+			testGeneric(5, 1);
+		}
+
+		@Test
+		void shouldFailFastWhenTaskThrows() throws Exception {
+			var taskCount = 100;
+			var concurrency = 5;
+			var tasksRun = new AtomicInteger();
+			var failureMessage = "Task 0 failed";
+
+			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Callable<Integer>) () -> {
+				tasksRun.incrementAndGet();
+				if (i == 0) {
+					throw new RuntimeException(failureMessage);
+				}
+				Thread.sleep(50);
+				return i;
+			});
+
+			var exception = assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(tasks, concurrency));
+
+			assertEquals(failureMessage, exception.getCause().getMessage());
+			assertTrue(
+					tasksRun.get() <= concurrency + 1,
+					"Expected at most concurrency + 1 tasks to run, but " + tasksRun.get() + " tasks ran");
+		}
+
+		private static void testGeneric(int taskCount, int concurrency)
+				throws InterruptedException, ExecutionException {
+			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Callable<Integer>) () -> i);
+
+			var results = VirtualThreads.callAll(tasks, concurrency);
+
+			assertNotNull(results);
+			assertEquals(taskCount, results.size());
+			for (var i = 0; i < taskCount; i++) {
+				assertEquals(i, results.get(i));
+			}
 		}
 	}
 
-	@Test
-	void shouldMaintainMaxConcurrency() throws Exception {
-		var taskCount = 50;
-		var concurrency = 5;
-		var currentConcurrency = new AtomicInteger();
-		var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Callable<Integer>) () -> {
-			var c = currentConcurrency.incrementAndGet();
-			if (i >= taskCount && i < (taskCount - concurrency)) {
-				assertEquals(concurrency, c);
-			}
-			Thread.sleep(100);
-			return i;
-		});
-
-		var results = VirtualThreads.runAll(tasks, concurrency);
-
-		assertNotNull(results);
-		assertEquals(taskCount, results.size());
-		for (var i = 0; i < taskCount; i++) {
-			assertEquals(i, results.get(i));
+	@Nested
+	class RunAllTests {
+		@Test
+		void shouldHandleSingleTask() throws Exception {
+			VirtualThreads.runAll(Stream.of((Runnable) () -> {}), 1);
 		}
-	}
 
-	@Test
-	void shouldHandleEmptyStream() throws Exception {
-		var results = VirtualThreads.runAll(Stream.empty(), 5);
+		@Test
+		void shouldExecuteAllTasks() throws Exception {
+			var taskCount = 50;
+			var concurrency = 5;
+			var tasksRun = new AtomicInteger();
 
-		assertNotNull(results);
-		assertTrue(results.isEmpty());
-	}
+			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> tasksRun.incrementAndGet());
 
-	@Test
-	void shouldHandleHighConcurrencyWithFewTasks() throws Exception {
-		testGeneric(5, 50);
-	}
+			VirtualThreads.runAll(tasks, concurrency);
 
-	@Test
-	void shouldHandleConcurrencyLimitOfOne() throws Exception {
-		testGeneric(5, 1);
-	}
+			assertEquals(taskCount, tasksRun.get());
+		}
 
-	@Test
-	void shouldFailFastWhenTaskThrows() throws Exception {
-		var taskCount = 100;
-		var concurrency = 5;
-		var tasksRun = new AtomicInteger();
-		var failureMessage = "Task 0 failed";
+		@Test
+		void shouldExecuteAllTasksWithLongDuration() throws Exception {
+			var rng = SecureRandom.getInstanceStrong();
+			var taskCount = 50;
+			var tasksRun = new AtomicInteger();
 
-		var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Callable<Integer>) () -> {
-			tasksRun.incrementAndGet();
-			if (i == 0) {
-				throw new RuntimeException(failureMessage);
-			}
-			Thread.sleep(50);
-			return i;
-		});
+			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> {
+				try {
+					Thread.sleep(rng.nextInt(200) + 200);
+					tasksRun.incrementAndGet();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			});
 
-		var exception = assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(tasks, concurrency));
+			VirtualThreads.runAll(tasks, 5);
 
-		assertEquals(failureMessage, exception.getCause().getMessage());
-		assertTrue(
-				tasksRun.get() <= concurrency + 1,
-				"Expected at most concurrency + 1 tasks to run, but " + tasksRun.get() + " tasks ran");
-	}
+			assertEquals(taskCount, tasksRun.get());
+		}
 
-	private static void testGeneric(int taskCount, int concurrency) throws InterruptedException, ExecutionException {
-		var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Callable<Integer>) () -> i);
+		@Test
+		void shouldMaintainMaxConcurrency() throws Exception {
+			var taskCount = 50;
+			var concurrency = 5;
+			var currentConcurrency = new AtomicInteger();
+			var maxObserved = new AtomicInteger();
 
-		var results = VirtualThreads.runAll(tasks, concurrency);
+			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> {
+				var c = currentConcurrency.incrementAndGet();
+				maxObserved.accumulateAndGet(c, Math::max);
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+				currentConcurrency.decrementAndGet();
+			});
 
-		assertNotNull(results);
-		assertEquals(taskCount, results.size());
-		for (var i = 0; i < taskCount; i++) {
-			assertEquals(i, results.get(i));
+			VirtualThreads.runAll(tasks, concurrency);
+
+			assertTrue(
+					maxObserved.get() <= concurrency,
+					"Max concurrency was " + maxObserved.get() + ", expected at most " + concurrency);
+		}
+
+		@Test
+		void shouldHandleEmptyStream() throws Exception {
+			VirtualThreads.runAll(Stream.empty(), 5);
+		}
+
+		@Test
+		void shouldExecuteAllTasksWithHighConcurrencyAndFewTasks() throws Exception {
+			var taskCount = 5;
+			var concurrency = 50;
+			var tasksRun = new AtomicInteger();
+
+			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> tasksRun.incrementAndGet());
+
+			VirtualThreads.runAll(tasks, concurrency);
+
+			assertEquals(taskCount, tasksRun.get());
+		}
+
+		@Test
+		void shouldHandleConcurrencyLimitOfOne() throws Exception {
+			var taskCount = 5;
+			var tasksRun = new AtomicInteger();
+
+			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> tasksRun.incrementAndGet());
+
+			VirtualThreads.runAll(tasks, 1);
+
+			assertEquals(taskCount, tasksRun.get());
+		}
+
+		@Test
+		void shouldFailFastWhenTaskThrows() throws Exception {
+			var taskCount = 100;
+			var concurrency = 5;
+			var tasksRun = new AtomicInteger();
+			var failureMessage = "Task 0 failed";
+
+			var tasks = IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> {
+				tasksRun.incrementAndGet();
+				if (i == 0) {
+					throw new RuntimeException(failureMessage);
+				}
+				try {
+					Thread.sleep(50);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			});
+
+			var exception = assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(tasks, concurrency));
+
+			assertEquals(failureMessage, exception.getCause().getMessage());
+			assertTrue(
+					tasksRun.get() <= concurrency + 1,
+					"Expected at most concurrency + 1 tasks to run, but " + tasksRun.get() + " tasks ran");
 		}
 	}
 }

@@ -69,11 +69,11 @@ jacocoTestReport {
 spotless {
 	java {
 		palantirJavaFormat()
-		indentWithTabs()
+		leadingSpacesToTabs()
 	}
 
 	groovyGradle {
-		indentWithTabs()
+		leadingSpacesToTabs()
 	}
 }
 
