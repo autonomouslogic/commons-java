@@ -24,8 +24,9 @@ public class VirtualThreads {
 		if (maxConcurrency <= 0) {
 			throw new IllegalArgumentException("maxConcurrency must be > 0");
 		}
-		var iterator = tasks.iterator();
-		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+		try (tasks;
+				var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+			var iterator = tasks.iterator();
 			var completion = new ExecutorCompletionService<Result<T>>(executor);
 			var results = new ArrayList<T>();
 			int nextIndex = 0;
@@ -77,8 +78,9 @@ public class VirtualThreads {
 		if (maxConcurrency <= 0) {
 			throw new IllegalArgumentException("maxConcurrency must be > 0");
 		}
-		var iterator = tasks.iterator();
-		try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+		try (tasks;
+				var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+			var iterator = tasks.iterator();
 			var completion = new ExecutorCompletionService<Void>(executor);
 			int inFlight = 0;
 			while (iterator.hasNext() || inFlight > 0) {

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.security.SecureRandom;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -139,6 +140,31 @@ class VirtualThreadsTest {
 				assertEquals(i * 2, results.get(i));
 			}
 		}
+
+		@Test
+		void shouldCloseStreamOnTaskFailure() throws Exception {
+			var streamClosed = new AtomicBoolean(false);
+			var taskCount = 100;
+			var concurrency = 5;
+
+			var tasks = trackableCallableStream(
+					IntStream.range(0, taskCount).mapToObj(i -> (Callable<Integer>) () -> {
+						if (i == 0) {
+							throw new RuntimeException("Task 0 failed");
+						}
+						Thread.sleep(50);
+						return i;
+					}),
+					streamClosed);
+
+			assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(tasks, concurrency));
+
+			assertTrue(streamClosed.get());
+		}
+
+		private static <T> Stream<T> trackableCallableStream(Stream<T> source, AtomicBoolean closed) {
+			return source.onClose(() -> closed.set(true));
+		}
 	}
 
 	@Nested
@@ -259,6 +285,34 @@ class VirtualThreadsTest {
 			VirtualThreads.runAll(inputs, i -> processed.incrementAndGet(), 5);
 
 			assertEquals(10, processed.get());
+		}
+
+		@Test
+		void shouldCloseStreamOnTaskFailure() throws Exception {
+			var streamClosed = new AtomicBoolean(false);
+			var taskCount = 100;
+			var concurrency = 5;
+
+			var tasks = trackableRunnableStream(
+					IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> {
+						if (i == 0) {
+							throw new RuntimeException("Task 0 failed");
+						}
+						try {
+							Thread.sleep(50);
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+						}
+					}),
+					streamClosed);
+
+			assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(tasks, concurrency));
+
+			assertTrue(streamClosed.get());
+		}
+
+		private static <T> Stream<T> trackableRunnableStream(Stream<T> source, AtomicBoolean closed) {
+			return source.onClose(() -> closed.set(true));
 		}
 	}
 }
