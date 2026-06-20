@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -131,27 +130,6 @@ class VirtualThreadsTest {
 		}
 
 		@Test
-		void shouldCloseStreamOnTaskFailure() throws Exception {
-			var streamClosed = new AtomicBoolean(false);
-			var taskCount = 100;
-			var concurrency = 5;
-
-			var tasks = trackableCallableStream(
-					IntStream.range(0, taskCount).mapToObj(i -> (Callable<Integer>) () -> {
-						if (i == 0) {
-							throw new RuntimeException("Task 0 failed");
-						}
-						Thread.sleep(50);
-						return i;
-					}),
-					streamClosed);
-
-			assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(tasks, concurrency));
-
-			assertTrue(streamClosed.get());
-		}
-
-		@Test
 		void shouldHandleIterableOfCallables() throws Exception {
 			var tasks = new ArrayList<Callable<Integer>>();
 			for (int i = 0; i < 10; i++) {
@@ -166,10 +144,6 @@ class VirtualThreadsTest {
 			for (int i = 0; i < 10; i++) {
 				assertEquals(i, results.get(i));
 			}
-		}
-
-		private static <T> Stream<T> trackableCallableStream(Stream<T> source, AtomicBoolean closed) {
-			return source.onClose(() -> closed.set(true));
 		}
 	}
 
@@ -284,30 +258,6 @@ class VirtualThreadsTest {
 		}
 
 		@Test
-		void shouldCloseStreamOnTaskFailure() throws Exception {
-			var streamClosed = new AtomicBoolean(false);
-			var taskCount = 100;
-			var concurrency = 5;
-
-			var tasks = trackableRunnableStream(
-					IntStream.range(0, taskCount).mapToObj(i -> (Runnable) () -> {
-						if (i == 0) {
-							throw new RuntimeException("Task 0 failed");
-						}
-						try {
-							Thread.sleep(50);
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
-						}
-					}),
-					streamClosed);
-
-			assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(tasks, concurrency));
-
-			assertTrue(streamClosed.get());
-		}
-
-		@Test
 		void shouldHandleIterableOfRunnables() throws Exception {
 			var tasksRun = new AtomicInteger();
 			var tasks = new ArrayList<Runnable>();
@@ -318,10 +268,6 @@ class VirtualThreadsTest {
 			VirtualThreads.runAll(tasks, 5);
 
 			assertEquals(10, tasksRun.get());
-		}
-
-		private static <T> Stream<T> trackableRunnableStream(Stream<T> source, AtomicBoolean closed) {
-			return source.onClose(() -> closed.set(true));
 		}
 	}
 

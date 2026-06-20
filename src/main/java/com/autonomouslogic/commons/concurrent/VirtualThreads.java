@@ -10,8 +10,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import lombok.NonNull;
 
 public class VirtualThreads {
@@ -21,26 +21,13 @@ public class VirtualThreads {
 	 * Fail-fast: first task failure cancels remaining tasks and propagates.
 	 * This method is blocking.
 	 */
-	@SuppressWarnings("unchecked")
 	public static <T> List<T> callAll(@NonNull Iterable<? extends Callable<T>> tasks, int maxConcurrency)
-			throws InterruptedException, ExecutionException {
-		return callAll(
-				(Stream<Callable<T>>) (Stream<?>) StreamSupport.stream(tasks.spliterator(), false), maxConcurrency);
-	}
-
-	/**
-	 * Executes tasks on virtual threads with bounded concurrency.
-	 * Returns results in submission order.
-	 * Fail-fast: first task failure cancels remaining tasks and propagates.
-	 * This method is blocking.
-	 */
-	public static <T> List<T> callAll(@NonNull Stream<Callable<T>> tasks, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
 		if (maxConcurrency <= 0) {
 			throw new IllegalArgumentException("maxConcurrency must be > 0");
 		}
-		try (tasks;
-				var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+		var executor = Executors.newVirtualThreadPerTaskExecutor();
+		try {
 			var iterator = tasks.iterator();
 			var completion = new ExecutorCompletionService<Result<T>>(executor);
 			var results = new ArrayList<T>();
@@ -95,18 +82,20 @@ public class VirtualThreads {
 				}
 			}
 			return results;
+		} finally {
+			executor.shutdown();
 		}
 	}
 
 	/**
 	 * Executes tasks on virtual threads with bounded concurrency.
+	 * Returns results in submission order.
 	 * Fail-fast: first task failure cancels remaining tasks and propagates.
 	 * This method is blocking.
 	 */
-	@SuppressWarnings("unchecked")
-	public static void runAll(@NonNull Iterable<? extends Runnable> tasks, int maxConcurrency)
+	public static <T> List<T> callAll(@NonNull Stream<Callable<T>> tasks, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
-		runAll((Stream<Runnable>) (Stream<?>) StreamSupport.stream(tasks.spliterator(), false), maxConcurrency);
+		return callAll(tasks.collect(Collectors.toList()), maxConcurrency);
 	}
 
 	/**
@@ -114,13 +103,13 @@ public class VirtualThreads {
 	 * Fail-fast: first task failure cancels remaining tasks and propagates.
 	 * This method is blocking.
 	 */
-	public static void runAll(@NonNull Stream<Runnable> tasks, int maxConcurrency)
+	public static void runAll(@NonNull Iterable<? extends Runnable> tasks, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
 		if (maxConcurrency <= 0) {
 			throw new IllegalArgumentException("maxConcurrency must be > 0");
 		}
-		try (tasks;
-				var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+		var executor = Executors.newVirtualThreadPerTaskExecutor();
+		try {
 			var iterator = tasks.iterator();
 			var completion = new ExecutorCompletionService<Void>(executor);
 			int inFlight = 0;
@@ -166,7 +155,19 @@ public class VirtualThreads {
 				}
 				inFlight--;
 			}
+		} finally {
+			executor.shutdown();
 		}
+	}
+
+	/**
+	 * Executes tasks on virtual threads with bounded concurrency.
+	 * Fail-fast: first task failure cancels remaining tasks and propagates.
+	 * This method is blocking.
+	 */
+	public static void runAll(@NonNull Stream<Runnable> tasks, int maxConcurrency)
+			throws InterruptedException, ExecutionException {
+		runAll(tasks.collect(Collectors.toList()), maxConcurrency);
 	}
 
 	/**
@@ -177,9 +178,11 @@ public class VirtualThreads {
 	 */
 	public static <T, R> List<R> callAll(@NonNull Iterable<T> inputs, @NonNull Function<T, R> fn, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
-		return callAll(
-				StreamSupport.stream(inputs.spliterator(), false).map(input -> (Callable<R>) () -> fn.apply(input)),
-				maxConcurrency);
+		var tasks = new ArrayList<Callable<R>>();
+		for (var input : inputs) {
+			tasks.add(() -> fn.apply(input));
+		}
+		return callAll(tasks, maxConcurrency);
 	}
 
 	/**
@@ -190,7 +193,7 @@ public class VirtualThreads {
 	 */
 	public static <T, R> List<R> callAll(@NonNull Stream<T> inputs, @NonNull Function<T, R> fn, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
-		return callAll(inputs.map(input -> (Callable<R>) () -> fn.apply(input)), maxConcurrency);
+		return callAll(inputs.collect(Collectors.toList()), fn, maxConcurrency);
 	}
 
 	/**
@@ -200,9 +203,11 @@ public class VirtualThreads {
 	 */
 	public static <T> void runAll(@NonNull Iterable<T> inputs, @NonNull Consumer<T> action, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
-		runAll(
-				StreamSupport.stream(inputs.spliterator(), false).map(input -> (Runnable) () -> action.accept(input)),
-				maxConcurrency);
+		var tasks = new ArrayList<Runnable>();
+		for (var input : inputs) {
+			tasks.add(() -> action.accept(input));
+		}
+		runAll(tasks, maxConcurrency);
 	}
 
 	/**
@@ -212,7 +217,7 @@ public class VirtualThreads {
 	 */
 	public static <T> void runAll(@NonNull Stream<T> inputs, @NonNull Consumer<T> action, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
-		runAll(inputs.map(input -> (Runnable) () -> action.accept(input)), maxConcurrency);
+		runAll(inputs.collect(Collectors.toList()), action, maxConcurrency);
 	}
 
 	private static class Result<T> {
