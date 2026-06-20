@@ -57,6 +57,14 @@ public class VirtualThreads {
 						}
 					} catch (ExecutionException e) {
 						executor.shutdownNow();
+
+						try {
+							executor.awaitTermination(5, TimeUnit.SECONDS);
+						} catch (InterruptedException interrupted) {
+							Thread.currentThread().interrupt();
+							e.addSuppressed(interrupted);
+						}
+
 						throw e;
 					}
 				} catch (InterruptedException e) {
@@ -109,6 +117,14 @@ public class VirtualThreads {
 						finished.get();
 					} catch (ExecutionException e) {
 						executor.shutdownNow();
+
+						try {
+							executor.awaitTermination(5, TimeUnit.SECONDS);
+						} catch (InterruptedException interrupted) {
+							Thread.currentThread().interrupt();
+							e.addSuppressed(interrupted);
+						}
+
 						throw e;
 					}
 				} catch (InterruptedException e) {
