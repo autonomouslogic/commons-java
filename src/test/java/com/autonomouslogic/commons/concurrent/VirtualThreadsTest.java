@@ -9,6 +9,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -283,6 +284,97 @@ class VirtualThreadsTest {
 			VirtualThreads.runAll(tasks, 5);
 
 			assertEquals(10, tasksRun.get());
+		}
+	}
+
+	@Nested
+	class InterruptTests {
+		@Test
+		void callAllShouldPropagateInterruptAndResetFlag() throws Exception {
+			var maxConcurrency = 2;
+			var started = new CountDownLatch(maxConcurrency);
+			var blocker = new CountDownLatch(1);
+			var callingThread = Thread.currentThread();
+
+			var tasks = List.<Callable<Integer>>of(
+					() -> {
+						started.countDown();
+						blocker.await();
+						return 1;
+					},
+					() -> {
+						started.countDown();
+						blocker.await();
+						return 2;
+					});
+
+			var interrupter = Thread.ofVirtual().start(() -> {
+				try {
+					started.await();
+					callingThread.interrupt();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			});
+
+			try {
+				var ex = assertThrows(InterruptedException.class, () -> VirtualThreads.callAll(tasks, maxConcurrency));
+				assertNotNull(ex);
+				assertTrue(
+						Thread.currentThread().isInterrupted(),
+						"Interrupt flag must be re-set after InterruptedException from callAll");
+			} finally {
+				blocker.countDown();
+				Thread.interrupted(); // clear flag so JUnit teardown is unaffected
+				interrupter.join(2000);
+			}
+		}
+
+		@Test
+		void runAllShouldPropagateInterruptAndResetFlag() throws Exception {
+			var maxConcurrency = 2;
+			var started = new CountDownLatch(maxConcurrency);
+			var blocker = new CountDownLatch(1);
+			var callingThread = Thread.currentThread();
+
+			var tasks = List.<Runnable>of(
+					() -> {
+						try {
+							started.countDown();
+							blocker.await();
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+						}
+					},
+					() -> {
+						try {
+							started.countDown();
+							blocker.await();
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+						}
+					});
+
+			var interrupter = Thread.ofVirtual().start(() -> {
+				try {
+					started.await();
+					callingThread.interrupt();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			});
+
+			try {
+				var ex = assertThrows(InterruptedException.class, () -> VirtualThreads.runAll(tasks, maxConcurrency));
+				assertNotNull(ex);
+				assertTrue(
+						Thread.currentThread().isInterrupted(),
+						"Interrupt flag must be re-set after InterruptedException from runAll");
+			} finally {
+				blocker.countDown();
+				Thread.interrupted(); // clear flag so JUnit teardown is unaffected
+				interrupter.join(2000);
+			}
 		}
 	}
 
