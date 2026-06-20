@@ -20,6 +20,16 @@ class VirtualThreadsTest {
 	@Nested
 	class CallAllTests {
 		@Test
+		void shouldHandleSingleTaskUsingIterator() throws Exception {
+			var results = VirtualThreads.callAll(
+					List.of((Callable<String>) () -> "single-result").iterator(), 1);
+
+			assertNotNull(results);
+			assertEquals(1, results.size());
+			assertEquals("single-result", results.get(0));
+		}
+
+		@Test
 		void shouldHandleSingleTask() throws Exception {
 			var results = VirtualThreads.callAll(Stream.of((Callable<String>) () -> "single-result"), 1);
 
@@ -150,6 +160,11 @@ class VirtualThreadsTest {
 	@Nested
 	class RunAllTests {
 		@Test
+		void shouldHandleSingleTaskUsingIterator() throws Exception {
+			VirtualThreads.runAll(List.of((Runnable) () -> {}).iterator(), 1);
+		}
+
+		@Test
 		void shouldHandleSingleTask() throws Exception {
 			VirtualThreads.runAll(Stream.of((Runnable) () -> {}), 1);
 		}
@@ -274,6 +289,18 @@ class VirtualThreadsTest {
 	@Nested
 	class CallAllWithFunctionTests {
 		@Test
+		void shouldTransformInputsUsingIterator() throws Exception {
+			var inputs = List.of(1, 2, 3, 4, 5);
+
+			var results = VirtualThreads.callAll(inputs.iterator(), i -> i * 2, 3);
+
+			assertNotNull(results);
+			assertEquals(5, results.size());
+			assertEquals(2, results.get(0));
+			assertEquals(10, results.get(4));
+		}
+
+		@Test
 		void shouldTransformInputsUsingStream() throws Exception {
 			var inputs = IntStream.range(0, 10).boxed();
 
@@ -301,6 +328,16 @@ class VirtualThreadsTest {
 
 	@Nested
 	class RunAllWithConsumerTests {
+		@Test
+		void shouldProcessInputsUsingIterator() throws Exception {
+			var processed = new AtomicInteger();
+			var inputs = List.of(1, 2, 3, 4, 5);
+
+			VirtualThreads.runAll(inputs.iterator(), i -> processed.incrementAndGet(), 3);
+
+			assertEquals(5, processed.get());
+		}
+
 		@Test
 		void shouldProcessInputsUsingStream() throws Exception {
 			var inputs = IntStream.range(0, 10).boxed();
