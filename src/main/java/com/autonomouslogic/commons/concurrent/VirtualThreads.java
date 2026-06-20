@@ -262,9 +262,9 @@ public class VirtualThreads {
 		runAll(inputs.map(input -> (Runnable) () -> action.accept(input)).iterator(), maxConcurrency);
 	}
 
-	private static class Result<T> {
-		final int index;
-		final T value;
+	private static final class Result<T> {
+		private final int index;
+		private final T value;
 
 		Result(int index, T value) {
 			this.index = index;
