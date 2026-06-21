@@ -1,5 +1,27 @@
 Commons Java Changelog
 
+## [1.10.0](https://github.com/autonomouslogic/commons-java/compare/1.9.19...1.10.0) (2026-06-21)
+
+
+### Features
+
+* Upgraded to Java 21 ([#104](https://github.com/autonomouslogic/commons-java/issues/104)) ([d300116](https://github.com/autonomouslogic/commons-java/commit/d3001169ed8ae7f92df93644a5d8e24bd0612ab9))
+* VirtualThreads concurrent executor ([#103](https://github.com/autonomouslogic/commons-java/issues/103)) ([a693af0](https://github.com/autonomouslogic/commons-java/commit/a693af0d19240461ce1d67ed12caf3edf7bcda7e))
+
+
+### Miscellaneous Chores
+
+* **deps:** update actions/checkout action to v7 ([#102](https://github.com/autonomouslogic/commons-java/issues/102)) ([02f15a3](https://github.com/autonomouslogic/commons-java/commit/02f15a34f0bf904e859b2925316920461e5e1e47))
+* **deps:** update amannn/action-semantic-pull-request action to v6 ([#83](https://github.com/autonomouslogic/commons-java/issues/83)) ([9d757e4](https://github.com/autonomouslogic/commons-java/commit/9d757e465144e2744810867349126424a1eddc58))
+* **deps:** update codecov/codecov-action action to v7 ([#101](https://github.com/autonomouslogic/commons-java/issues/101)) ([f6cea36](https://github.com/autonomouslogic/commons-java/commit/f6cea36340389073b47566ccfcaa8521ab92a5c9))
+* **deps:** update gradle to v8.14.5 ([#100](https://github.com/autonomouslogic/commons-java/issues/100)) ([fd5502d](https://github.com/autonomouslogic/commons-java/commit/fd5502df98afb882e5edce363418ed6977dc1fb0))
+* **release:** 1.10.0 [skip ci] ([5681604](https://github.com/autonomouslogic/commons-java/commit/56816047b58b65d08953c08c3b961511e2090d96)), closes [#104](https://github.com/autonomouslogic/commons-java/issues/104) [#103](https://github.com/autonomouslogic/commons-java/issues/103) [#102](https://github.com/autonomouslogic/commons-java/issues/102) [#83](https://github.com/autonomouslogic/commons-java/issues/83) [#101](https://github.com/autonomouslogic/commons-java/issues/101) [#100](https://github.com/autonomouslogic/commons-java/issues/100)
+* Revert 1.10.0 release ([0d795c2](https://github.com/autonomouslogic/commons-java/commit/0d795c27c32d84bf1b0682eb3c7a43f3094a627d))
+
+
+### Continuous Integration
+
+* Fixed release scripts ([f1a13ff](https://github.com/autonomouslogic/commons-java/commit/f1a13ffb51f3b1851fc499b11c057c47e0b40491))
 
 ## [1.9.19](https://github.com/autonomouslogic/commons-java/compare/1.9.18...1.9.19) (2026-05-04)
 
