@@ -1,5 +1,23 @@
 Commons Java Changelog
 
+## [1.11.0](https://github.com/autonomouslogic/commons-java/compare/1.10.0...1.11.0) (2026-06-21)
+
+
+### Features
+
+* VirtualThreads onVirtual, isVirtual, and checkIsVirtual ([#105](https://github.com/autonomouslogic/commons-java/issues/105)) ([15de090](https://github.com/autonomouslogic/commons-java/commit/15de0906a72561c57f79ace179fbff3feed7b95b))
+
+
+### Documentation
+
+* Better documentation and readme ([#106](https://github.com/autonomouslogic/commons-java/issues/106)) ([bd349c7](https://github.com/autonomouslogic/commons-java/commit/bd349c7d38c6537450c873730d13a9d1fd977bab))
+
+
+### Miscellaneous Chores
+
+* **deps:** update actions/setup-java action to v5 ([#85](https://github.com/autonomouslogic/commons-java/issues/85)) ([562f45b](https://github.com/autonomouslogic/commons-java/commit/562f45b287dec29f5cae7400c571f49e49f4450c))
+* **deps:** update plugin com.diffplug.spotless to v8 ([#87](https://github.com/autonomouslogic/commons-java/issues/87)) ([99a1772](https://github.com/autonomouslogic/commons-java/commit/99a17722a340ecd18a3055a506dfb76cbddcb575))
+
 ## [1.10.0](https://github.com/autonomouslogic/commons-java/compare/1.9.19...1.10.0) (2026-06-21)
 
 
