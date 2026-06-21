@@ -16,6 +16,4 @@ git push --force origin $VERSION
 
 ./gradlew clean
 
-#./gradlew publishToSonatype closeSonatypeStagingRepository --stacktrace
-# Use the command below to automatically release.
-./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository --stacktrace
+./gradlew publishAllPublicationsToProjectLocalRepository zipMavenCentralPortalPublication releaseMavenCentralPortalPublication --stacktrace
