@@ -95,7 +95,6 @@ public class Config<T> {
 	 *
 	 * @return an Optional containing the parsed value, or empty if not found and no default configured
 	 * @throws IllegalArgumentException if parsing fails or both {@code <NAME>} and {@code <NAME>_FILE} are set
-	 * @throws java.io.FileNotFoundException if {@code <NAME>_FILE} points to a non-existent file
 	 */
 	public Optional<T> get() {
 		return getSetValue().or(this::getDefaultValue);
@@ -107,9 +106,8 @@ public class Config<T> {
 	 * <p>Same as {@link #get()}, but throws if the value is not found.
 	 *
 	 * @return the parsed value
-	 * @throws IllegalArgumentException if the value is not set and no default is configured
-	 * @throws IllegalArgumentException if parsing fails or both {@code <NAME>} and {@code <NAME>_FILE} are set
-	 * @throws java.io.FileNotFoundException if {@code <NAME>_FILE} points to a non-existent file
+	 * @throws IllegalArgumentException if the value is not set and no default is configured, or if parsing fails,
+	 *         or if both {@code <NAME>} and {@code <NAME>_FILE} are set
 	 */
 	public T getRequired() {
 		return get().orElseThrow(() -> new IllegalArgumentException(String.format("No value for %s", name)));

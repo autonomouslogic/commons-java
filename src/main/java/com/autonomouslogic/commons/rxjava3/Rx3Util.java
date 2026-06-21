@@ -214,8 +214,8 @@ public class Rx3Util {
 	}
 
 	/**
-	 * Zips publishers until all sources have emitted and completed, unlike standard {@link Flowable#zipArray(Function, int, Publisher[])}
-	 * which stops when the shortest source completes.
+	 * Zips publishers until all sources have emitted and completed, unlike standard Flowable zip operations
+	 * which stop when the shortest source completes.
 	 *
 	 * <p>Values are wrapped in {@link Optional} to distinguish between "no value emitted" and "null value".
 	 * Once a source completes, it continues emitting empty Optionals to allow other sources to catch up.
