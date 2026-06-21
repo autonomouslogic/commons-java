@@ -34,14 +34,25 @@ public class Rx3Util {
 	/**
 	 * Converts a {@link CompletionStage} to a {@link Single}.
 	 *
-	 * Null return values will result in an error from RxJava, as those aren't allowed.
-	 * Use {@link #toMaybe(CompletionStage)} instead to handle null values properly.
+	 * <p>Unlike {@link Single#fromFuture(Future)}, this works non-blocking with CompletionStage callbacks.
+	 * Null return values will result in an error, as RxJava Single doesn't allow null. Use {@link #toMaybe(CompletionStage)}
+	 * for null-safe conversions.
 	 *
-	 * {@link Single#fromFuture(Future)} works in a blocking fashion, whereas {@link CompletionStage} can be utilised to avoid blocking calls.
+	 * <p><b>Example:</b>
+	 * <pre>{@code
+	 * CompletableFuture<String> future = asyncOperation();
+	 * Single<String> single = Rx3Util.toSingle(future);
 	 *
-	 * @param future the completion stage
-	 * @return the Single
-	 * @param <T> the return parameter of the future
+	 * single.subscribe(
+	 *     value -> System.out.println("Got: " + value),
+	 *     error -> System.err.println("Error: " + error)
+	 * );
+	 * }</pre>
+	 *
+	 * @param future the completion stage to convert
+	 * @return a Single that emits the completion stage's value
+	 * @param <T> the type of value the completion stage will produce
+	 * @throws NullPointerException if the completion stage completes with a null value
 	 */
 	public static <T> Single<T> toSingle(CompletionStage<T> future) {
 		return Single.create(emitter -> {
@@ -67,13 +78,24 @@ public class Rx3Util {
 	/**
 	 * Converts a {@link CompletionStage} to a {@link Maybe}.
 	 *
-	 * Null return values will result in an empty Maybe.
+	 * <p>Unlike {@link Maybe#fromFuture(Future)}, this works non-blocking with CompletionStage callbacks.
+	 * Null return values result in an empty Maybe (completion without a value).
 	 *
-	 * {@link Maybe#fromFuture(Future)} works in a blocking fashion, whereas {@link CompletionStage} can be utilised to avoid blocking calls.
+	 * <p><b>Example:</b>
+	 * <pre>{@code
+	 * CompletableFuture<String> future = asyncOperation();
+	 * Maybe<String> maybe = Rx3Util.toMaybe(future);
 	 *
-	 * @param future the completion stage
-	 * @return the Maybe
-	 * @param <T> the return parameter of the future
+	 * maybe.subscribe(
+	 *     value -> System.out.println("Got: " + value),
+	 *     error -> System.err.println("Error: " + error),
+	 *     () -> System.out.println("Completed without a value")
+	 * );
+	 * }</pre>
+	 *
+	 * @param future the completion stage to convert
+	 * @return a Maybe that emits the completion stage's value, or empty if it completes with null
+	 * @param <T> the type of value the completion stage will produce
 	 */
 	public static <T> Maybe<T> toMaybe(CompletionStage<T> future) {
 		return Maybe.create(emitter -> {
@@ -99,10 +121,21 @@ public class Rx3Util {
 	/**
 	 * Converts a {@link CompletionStage} to a {@link Completable}.
 	 *
-	 * {@link Completable#fromFuture(Future)} works in a blocking fashion, whereas {@link CompletionStage} can be utilised to avoid blocking calls.
+	 * <p>Unlike {@link Completable#fromFuture(Future)}, this works non-blocking with CompletionStage callbacks.
 	 *
-	 * @param future the completion stage
-	 * @return the Completable
+	 * <p><b>Example:</b>
+	 * <pre>{@code
+	 * CompletableFuture<Void> future = asyncOperation();
+	 * Completable completable = Rx3Util.toCompletable(future);
+	 *
+	 * completable.subscribe(
+	 *     () -> System.out.println("Operation completed"),
+	 *     error -> System.err.println("Error: " + error)
+	 * );
+	 * }</pre>
+	 *
+	 * @param future the completion stage to convert
+	 * @return a Completable that completes or errors based on the completion stage
 	 */
 	public static Completable toCompletable(CompletionStage<Void> future) {
 		return Completable.create(emitter -> {
@@ -166,21 +199,36 @@ public class Rx3Util {
 	}
 
 	/**
-	 * Merges a number of sources together always picking the next item from the source which compares the lowest.
-	 * In order to merge sources in a completely ordered way, it is assumed the sources are already themselves sorted.
-	 * @param comparator
-	 * @param sources
-	 * @return the merged Publisher
-	 * @param <T> the type of the Publisher to merge
+	 * Merges sorted sources into a single stream while maintaining order.
+	 *
+	 * <p>Emits items from whichever source has the lowest item according to the comparator, continuing until all
+	 * sources are exhausted. This assumes all input sources are already sorted according to the same comparator.
+	 *
+	 * @param comparator the comparator to determine which source provides the next item
+	 * @param sources the sorted publishers to merge
+	 * @return a Publisher emitting items in sorted order
+	 * @param <T> the type of items emitted by the publishers
 	 */
 	public static <T> Publisher<T> orderedMerge(Comparator<T> comparator, Publisher<T>... sources) {
 		return new OrderedMerger<>(comparator, sources).createPublisher();
 	}
 
 	/**
-	 * Like {@link Flowable#zipArray(Function, boolean, int, Publisher[])}, but keeps going until all the sources
-	 * have ended. It does this by wrapping all the values in {@link Optional}s and replacing the ended sources with empty
-	 * ones.
+	 * Zips publishers until all sources have emitted and completed, unlike standard {@link Flowable#zipArray(Function, int, Publisher[])}
+	 * which stops when the shortest source completes.
+	 *
+	 * <p>Values are wrapped in {@link Optional} to distinguish between "no value emitted" and "null value".
+	 * Once a source completes, it continues emitting empty Optionals to allow other sources to catch up.
+	 *
+	 * <p>This is useful when you want to track the latest value from each source even after some have completed.
+	 *
+	 * @param zipper function to combine values from all sources (receives Object array of Optional values)
+	 * @param delayError if true, errors are delayed until all sources complete; if false, errors terminate immediately
+	 * @param bufferSize the buffer size for each source
+	 * @param sources the publishers to zip
+	 * @return a Flowable emitting combined values from all sources
+	 * @param <T> the type of items emitted by the publishers
+	 * @param <R> the type of items emitted by the resulting Flowable
 	 */
 	public static <@NonNull T, @NonNull R> Flowable<R> zipAllFlowable(
 			@NonNull Function<? super Object[], ? extends R> zipper,
@@ -190,6 +238,16 @@ public class Rx3Util {
 		return new ZipAll<T, R>(zipper, delayError, bufferSize, sources).createFlowable();
 	}
 
+	/**
+	 * Convenience overload of {@link #zipAllFlowable(Function, boolean, int, Publisher[])} with default settings
+	 * (delayError=false, bufferSize=Flowable.bufferSize()).
+	 *
+	 * @param zipper function to combine values from all sources
+	 * @param sources the publishers to zip
+	 * @return a Flowable emitting combined values from all sources
+	 * @param <T> the type of items emitted by the publishers
+	 * @param <R> the type of items emitted by the resulting Flowable
+	 */
 	public static <@NonNull T, @NonNull R> Flowable<R> zipAllFlowable(
 			@NonNull Function<? super Object[], ? extends R> zipper, @NonNull Publisher<? extends T>... sources) {
 		return zipAllFlowable(zipper, false, Flowable.bufferSize(), sources);
@@ -212,10 +270,52 @@ public class Rx3Util {
 		return new CheckOrder<T>(comparator);
 	}
 
+	/**
+	 * Creates a transformer that retries a Flowable a specified number of times with a delay between attempts.
+	 *
+	 * <p>This is a convenience overload that retries on all errors. Use {@link #retryWithDelayFlowable(int, Duration, Predicate)}
+	 * to selectively retry only certain errors.
+	 *
+	 * <p><b>Example:</b>
+	 * <pre>{@code
+	 * Flowable<String> source = apiCall();
+	 * source.compose(Rx3Util.retryWithDelayFlowable(3, Duration.ofSeconds(1)))
+	 *     .subscribe(
+	 *         item -> System.out.println(item),
+	 *         error -> System.err.println("Failed after retries: " + error)
+	 *     );
+	 * }</pre>
+	 *
+	 * @param times the maximum number of retry attempts (0 means no retries)
+	 * @param delay the delay between retry attempts
+	 * @return a FlowableTransformer that retries with delay on error
+	 * @param <T> the type of items in the Flowable
+	 */
 	public static <T> FlowableTransformer<T, T> retryWithDelayFlowable(int times, Duration delay) {
 		return retryWithDelayFlowable(times, delay, e -> true);
 	}
 
+	/**
+	 * Creates a transformer that retries a Flowable a specified number of times with a delay between attempts,
+	 * only for errors matching a predicate.
+	 *
+	 * <p><b>Example:</b>
+	 * <pre>{@code
+	 * Flowable<String> source = apiCall();
+	 * source.compose(Rx3Util.retryWithDelayFlowable(3, Duration.ofSeconds(1), error -> error instanceof TimeoutException))
+	 *     .subscribe(
+	 *         item -> System.out.println(item),
+	 *         error -> System.err.println("Failed: " + error)
+	 *     );
+	 * }</pre>
+	 *
+	 * @param times the maximum number of retry attempts (0 means no retries)
+	 * @param delay the delay between retry attempts
+	 * @param predicate determines whether to retry for a given error
+	 * @return a FlowableTransformer that retries with delay on matching errors
+	 * @param <T> the type of items in the Flowable
+	 * @throws IllegalArgumentException if times is negative or delay is negative
+	 */
 	public static <T> FlowableTransformer<T, T> retryWithDelayFlowable(
 			int times, Duration delay, Predicate<? super Throwable> predicate) {
 		if (times < 0) {

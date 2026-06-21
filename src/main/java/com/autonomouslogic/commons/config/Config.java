@@ -12,27 +12,59 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 
 /**
- * A simple tool for defining and reading configs from environment variables.
- * Configs are defined like this:
- * <pre>
- * {@code
- * public class Configs {
- *     public static final Config<String> VARIABLE_NAME = Config.<String>builder()
- *         .name("VARIABLE_NAME")
+ * A builder-based tool for defining and reading configuration from environment variables with automatic type parsing.
+ *
+ * <p>Configurations are typically defined as static constants in a dedicated class, then accessed throughout the
+ * application. Config handles parsing environment variables into typed values (Integer, Boolean, Duration, etc.)
+ * and provides fallback defaults.
+ *
+ * <p><b>Basic usage:</b>
+ * <pre>{@code
+ * public class AppConfig {
+ *     public static final Config<String> ENVIRONMENT = Config.<String>builder()
+ *         .name("ENVIRONMENT")
  *         .type(String.class)
- *         .defaultValue("dev") // optional
- *         .defaultMethod(() -> "dev") // optional
+ *         .defaultValue("dev")
+ *         .build();
+ *
+ *     public static final Config<Integer> PORT = Config.<Integer>builder()
+ *         .name("PORT")
+ *         .type(Integer.class)
+ *         .defaultValue(8080)
  *         .build();
  * }
- * }
- * </pre>
- * And can then be read by {@link #get()} which returns an <code>Optional</code>,
- * or by {@link #getRequired()} which throws an exception if not found.
  *
- * A <code>_FILE</code> suffix is also supported for reading config values from files.
- * This is useful for storing secrets to avoid them being present directly in the environment.
- * In the example above, setting the environment variable <code>VARIABLE_NAME_FILE=/tmp/value.secret</code> would cause
- * the contents of <code>/tmp/value.secret</code> to be used instead.
+ * // Read values
+ * Optional<String> env = AppConfig.ENVIRONMENT.get();   // with default
+ * Integer port = AppConfig.PORT.getRequired();           // throws if not set
+ * }</pre>
+ *
+ * <p><b>Supported types:</b> String, Integer, Long, Float, Double, Boolean, BigInteger, BigDecimal,
+ * LocalDate, Duration, Period, URI. Custom types can be supported by providing a custom {@link ConfigParser}.
+ *
+ * <p><b>File-based secrets:</b> Environment variables can reference files via a {@code _FILE} suffix.
+ * This is useful for storing sensitive values without exposing them in the environment:
+ * <pre>{@code
+ * // Instead of: export DATABASE_PASSWORD=secret123
+ * // Use: export DATABASE_PASSWORD_FILE=/run/secrets/db_password
+ *
+ * Config<String> dbPassword = Config.<String>builder()
+ *     .name("DATABASE_PASSWORD")
+ *     .type(String.class)
+ *     .build();
+ *
+ * // Reading dbPassword.get() will read from /run/secrets/db_password
+ * }</pre>
+ *
+ * <p><b>Default values:</b> Use {@code defaultValue()} for static defaults or {@code defaultMethod()}
+ * for computed defaults. Cannot specify both.
+ *
+ * <p><b>Error handling:</b>
+ * <ul>
+ * <li>{@link #get()} returns {@link Optional#empty()} if the variable is not set and no default is provided
+ * <li>{@link #getRequired()} throws {@link IllegalArgumentException} if the variable is missing
+ * <li>Parsing errors throw {@link IllegalArgumentException} with details about the type and variable name
+ * </ul>
  */
 @Builder
 public class Config<T> {
@@ -49,10 +81,36 @@ public class Config<T> {
 
 	Supplier<Optional<T>> defaultMethod;
 
+	/**
+	 * Reads the configuration value from the environment or returns a default.
+	 *
+	 * <p>Resolution order:
+	 * <ol>
+	 * <li>Environment variable (parsed to type)
+	 * <li>File at path specified by {@code <NAME>_FILE} environment variable
+	 * <li>Default value (if configured)
+	 * <li>Default method result (if configured)
+	 * <li>{@link Optional#empty()}
+	 * </ol>
+	 *
+	 * @return an Optional containing the parsed value, or empty if not found and no default configured
+	 * @throws IllegalArgumentException if parsing fails or both {@code <NAME>} and {@code <NAME>_FILE} are set
+	 * @throws java.io.FileNotFoundException if {@code <NAME>_FILE} points to a non-existent file
+	 */
 	public Optional<T> get() {
 		return getSetValue().or(this::getDefaultValue);
 	}
 
+	/**
+	 * Reads the configuration value from the environment or returns a default.
+	 *
+	 * <p>Same as {@link #get()}, but throws if the value is not found.
+	 *
+	 * @return the parsed value
+	 * @throws IllegalArgumentException if the value is not set and no default is configured
+	 * @throws IllegalArgumentException if parsing fails or both {@code <NAME>} and {@code <NAME>_FILE} are set
+	 * @throws java.io.FileNotFoundException if {@code <NAME>_FILE} points to a non-existent file
+	 */
 	public T getRequired() {
 		return get().orElseThrow(() -> new IllegalArgumentException(String.format("No value for %s", name)));
 	}

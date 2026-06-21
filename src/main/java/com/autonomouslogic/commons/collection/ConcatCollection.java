@@ -6,6 +6,28 @@ import java.util.Iterator;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * A read-only view that treats multiple collections as a single collection.
+ *
+ * <p>This class combines multiple collections without copying their elements. It's useful when you need to
+ * iterate over or search across multiple collections as if they were one, without the overhead of
+ * creating a new combined collection.
+ *
+ * <p><b>Note:</b> This is a package-private class. Use {@link com.autonomouslogic.commons.ListUtil#concat(List[])}
+ * to create a {@link ConcatList} instance instead.
+ *
+ * <p><b>Supported operations:</b>
+ * <ul>
+ * <li>Read-only: {@code size()}, {@code isEmpty()}, {@code contains()}, {@code iterator()}
+ * <li>Read-only variants of search methods
+ * </ul>
+ *
+ * <p><b>Unsupported operations:</b> All mutating operations throw {@link UnsupportedOperationException}
+ * (e.g., {@code add()}, {@code remove()}, {@code clear()}).
+ *
+ * @param <E> the type of elements in the collections
+ * @see ConcatList for a list-specific variant with indexed access
+ */
 @RequiredArgsConstructor
 abstract class ConcatCollection<E> implements Collection<E> {
 	private final List<Collection<E>> collections;
