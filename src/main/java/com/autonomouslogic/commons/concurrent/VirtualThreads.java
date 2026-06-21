@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -260,6 +261,73 @@ public class VirtualThreads {
 	public static <T> void runAll(@NonNull Stream<T> inputs, @NonNull Consumer<T> action, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
 		runAll(inputs.map(input -> (Runnable) () -> action.accept(input)).iterator(), maxConcurrency);
+	}
+
+	/**
+	 * Checks if the current thread is a virtual thread.
+	 *
+	 * @return true if the current thread is a virtual thread, false otherwise
+	 */
+	public static boolean isVirtual() {
+		return Thread.currentThread().isVirtual();
+	}
+
+	/**
+	 * Asserts that the current thread is a virtual thread.
+	 *
+	 * @throws NotVirtualThreadException if the current thread is not a virtual thread
+	 */
+	public static void checkIsVirtual() {
+		if (!isVirtual()) {
+			throw new NotVirtualThreadException();
+		}
+	}
+
+	/**
+	 * Executes a task on a virtual thread if the current thread is not virtual.
+	 * If the current thread is already virtual, the task is executed immediately.
+	 *
+	 * @param task the task to execute
+	 * @throws InterruptedException if the current thread is interrupted while waiting for the task to complete
+	 */
+	public static void onVirtualThread(@NonNull Runnable task) throws InterruptedException {
+		if (isVirtual()) {
+			task.run();
+		} else {
+			var thread = Thread.ofVirtual().start(task);
+			thread.join();
+		}
+	}
+
+	/**
+	 * Executes a callable task on a virtual thread if the current thread is not virtual.
+	 * If the current thread is already virtual, the task is executed immediately and the result is returned.
+	 *
+	 * @param <T> the type of the result
+	 * @param task the callable task to execute
+	 * @return the result of the task
+	 * @throws InterruptedException if the current thread is interrupted while waiting for the task to complete
+	 * @throws Exception if the task throws an exception
+	 */
+	public static <T> T onVirtualThread(@NonNull Callable<T> task) throws InterruptedException, Exception {
+		if (isVirtual()) {
+			return task.call();
+		} else {
+			var result = new AtomicReference<T>();
+			var exception = new AtomicReference<Exception>();
+			var thread = Thread.ofVirtual().start(() -> {
+				try {
+					result.set(task.call());
+				} catch (Exception e) {
+					exception.set(e);
+				}
+			});
+			thread.join();
+			if (exception.get() != null) {
+				throw exception.get();
+			}
+			return result.get();
+		}
 	}
 
 	private static final class Result<T> {

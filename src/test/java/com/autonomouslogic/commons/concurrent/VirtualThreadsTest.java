@@ -450,4 +450,115 @@ class VirtualThreadsTest {
 			assertEquals(5, processed.get());
 		}
 	}
+
+	@Nested
+	class ThreadTypeTests {
+		@Test
+		void isVirtualShouldReturnFalseForPlatformThread() {
+			assertTrue(!VirtualThreads.isVirtual());
+		}
+
+		@Test
+		void isVirtualShouldReturnTrueForVirtualThread() throws Exception {
+			var result = new AtomicInteger();
+			var virtualThread = Thread.ofVirtual().start(() -> {
+				result.set(VirtualThreads.isVirtual() ? 1 : 0);
+			});
+
+			virtualThread.join();
+
+			assertEquals(1, result.get());
+		}
+
+		@Test
+		void checkIsVirtualShouldThrowForPlatformThread() {
+			assertThrows(NotVirtualThreadException.class, VirtualThreads::checkIsVirtual);
+		}
+
+		@Test
+		void checkIsVirtualShouldNotThrowForVirtualThread() throws Exception {
+			var exceptionThrown = new AtomicInteger();
+			var virtualThread = Thread.ofVirtual().start(() -> {
+				try {
+					VirtualThreads.checkIsVirtual();
+				} catch (NotVirtualThreadException e) {
+					exceptionThrown.set(1);
+				}
+			});
+
+			virtualThread.join();
+
+			assertEquals(0, exceptionThrown.get());
+		}
+	}
+
+	@Nested
+	class OnVirtualThreadTests {
+		@Test
+		void runnableShouldExecuteImmediatelyOnVirtualThread() throws Exception {
+			var executed = new AtomicInteger();
+			var virtualThread = Thread.ofVirtual().start(() -> {
+				try {
+					VirtualThreads.onVirtualThread(() -> executed.set(1));
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			});
+
+			virtualThread.join();
+
+			assertEquals(1, executed.get());
+		}
+
+		@Test
+		void runnableShouldCreateNewVirtualThreadFromPlatformThread() throws Exception {
+			var executed = new AtomicInteger();
+			var threadId = new AtomicInteger();
+
+			VirtualThreads.onVirtualThread(() -> {
+				executed.set(1);
+				threadId.set((int) Thread.currentThread().threadId());
+			});
+
+			assertEquals(1, executed.get());
+			assertTrue(Thread.currentThread().threadId() != threadId.get());
+		}
+
+		@Test
+		void callableShouldReturnResultOnVirtualThread() throws Exception {
+			var result = new AtomicInteger();
+			var virtualThread = Thread.ofVirtual().start(() -> {
+				try {
+					var value = VirtualThreads.onVirtualThread(() -> 42);
+					result.set(value);
+				} catch (Exception e) {
+					Thread.currentThread().interrupt();
+				}
+			});
+
+			virtualThread.join();
+
+			assertEquals(42, result.get());
+		}
+
+		@Test
+		void callableShouldReturnResultFromCreatedVirtualThread() throws Exception {
+			var result = VirtualThreads.onVirtualThread(() -> 123);
+
+			assertEquals(123, result);
+		}
+
+		@Test
+		void callableShouldPropagateException() throws Exception {
+			var failureMessage = "Test failure";
+
+			var exception = assertThrows(
+					RuntimeException.class,
+					() -> VirtualThreads.onVirtualThread(() -> {
+						throw new RuntimeException(failureMessage);
+					}));
+
+			assertEquals(failureMessage, exception.getMessage());
+		}
+	}
 }
