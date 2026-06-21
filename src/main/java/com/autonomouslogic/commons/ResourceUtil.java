@@ -4,7 +4,30 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 /**
- * Loads class resources.
+ * Utility for loading resources (files) from the classpath, with clear error handling.
+ *
+ * <p>Standard Java resource loading via {@link Class#getResourceAsStream(String)} returns null if a resource
+ * is not found, which can lead to hard-to-debug NullPointerExceptions. ResourceUtil instead throws
+ * {@link FileNotFoundException} with the missing path, making issues obvious.
+ *
+ * <p><b>Basic usage:</b>
+ * <pre>{@code
+ * // Load from classpath root
+ * try (var in = ResourceUtil.loadResource("/config.json")) {
+ *     var config = new String(in.readAllBytes());
+ * }
+ * }</pre>
+ *
+ * <p><b>Contextual loading (great for tests):</b>
+ * <pre>{@code
+ * // For class com.example.MyTest, loads from /com/example/MyTest/data.json
+ * try (var in = ResourceUtil.loadContextual(MyTest.class, "/data.json")) {
+ *     var data = new String(in.readAllBytes());
+ * }
+ * }</pre>
+ *
+ * <p>Contextual loading is especially useful for organizing test fixtures: store each test's resources
+ * in a directory named after the test class within your test resources directory.
  */
 public class ResourceUtil {
 	private static final char RESOURCE_SEPARATOR = '/';
@@ -12,21 +35,34 @@ public class ResourceUtil {
 	private ResourceUtil() {}
 
 	/**
-	 * Loads a resource as an {@link InputStream}, throwing an exception if not found rather than simply returning null.
-	 * @param path the path to load
-	 * @return the input stream for the resource
-	 * @throws FileNotFoundException if not found
+	 * Loads a resource from the classpath root as an InputStream.
+	 *
+	 * <p>Unlike {@link Class#getResourceAsStream(String)}, this method throws {@link FileNotFoundException}
+	 * if the resource does not exist, rather than returning null.
+	 *
+	 * <p>Example: {@code loadResource("/config.json")} loads {@code src/main/resources/config.json}
+	 *
+	 * @param path the absolute path to the resource (must start with {@code /})
+	 * @return the InputStream for the resource
+	 * @throws FileNotFoundException if the resource does not exist
 	 */
 	public static InputStream loadResource(String path) throws FileNotFoundException {
 		return loadResource(ResourceUtil.class, path);
 	}
 
 	/**
-	 * Loads a resource as an {@link InputStream}, throwing an exception if not found rather than simply returning null.
-	 * @param clazz the class to use for resource loading
-	 * @param path the path to load
-	 * @return the input stream for the resource
-	 * @throws FileNotFoundException if not found
+	 * Loads a resource as an InputStream, resolved relative to a given class.
+	 *
+	 * <p>Unlike {@link Class#getResourceAsStream(String)}, this method throws {@link FileNotFoundException}
+	 * if the resource does not exist, rather than returning null.
+	 *
+	 * <p>Example: For class {@code com.example.Foo}, {@code loadResource(Foo.class, "/data.json")}
+	 * loads from {@code /com/example/data.json} on the classpath.
+	 *
+	 * @param clazz the class to use for resource resolution
+	 * @param path the path to the resource, relative to the class's package
+	 * @return the InputStream for the resource
+	 * @throws FileNotFoundException if the resource does not exist
 	 */
 	public static InputStream loadResource(Class<?> clazz, String path) throws FileNotFoundException {
 		var in = clazz.getResourceAsStream(path);
@@ -37,16 +73,19 @@ public class ResourceUtil {
 	}
 
 	/**
-	 * Loads a resource with the assumption that the path will be relative to one constructed from the class package and
-	 * name.
-	 * For instance, if the class <code>com.autonomouslogic.SomeClass</code> is provided, the path loaded will be
-	 * <code>/com/autonomouslogic/SomeClass/{path}</code>.
-	 * This is useful for loading resources during unit tests where you store resources for each test in a directory
-	 * named after the test class.
-	 * @param clazz the class to use for resource loading and contextual path
-	 * @param path the path to load
-	 * @return the input stream for the resource
-	 * @throws FileNotFoundException if not found
+	 * Loads a resource relative to the given class's package directory.
+	 *
+	 * <p>The path is resolved relative to a directory named after the class's fully-qualified name.
+	 * This is particularly useful for organizing test fixtures by test class.
+	 *
+	 * <p>Example: {@code loadContextual(com.example.MyTest.class, "/data.json")} loads from
+	 * {@code /com/example/MyTest/data.json} on the classpath. This corresponds to a file at
+	 * {@code src/test/resources/com/example/MyTest/data.json} in your project.
+	 *
+	 * @param clazz the class to use for resource resolution and contextual path construction
+	 * @param path the path relative to the class's contextual directory (typically starts with {@code /})
+	 * @return the InputStream for the resource
+	 * @throws FileNotFoundException if the resource does not exist
 	 */
 	public static InputStream loadContextual(Class<?> clazz, String path) throws FileNotFoundException {
 		var fullPath = RESOURCE_SEPARATOR + clazz.getCanonicalName().replace('.', RESOURCE_SEPARATOR) + path;
