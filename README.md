@@ -182,6 +182,44 @@ multiple times won't cause errors.
 - [Javadoc](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/Stopwatch.html)
 - [Source](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/Stopwatch.java)
 
+## VirtualThreads
+
+Executes I/O-bound tasks on virtual threads with bounded concurrency. Virtual threads are lightweight
+and can handle blocking I/O efficiently without tying up platform threads for APIs, database calls, and
+file operations.
+
+**Key capabilities:**
+
+- **`callAll()`** - Execute callables/functions and collect results in submission order
+  ```java
+  List<String> urls = List.of("https://api1.com", "https://api2.com");
+  List<String> responses = VirtualThreads.callAll(urls, url -> fetchUrl(url), 2);
+  // results in order: responses.get(0) is from urls.get(0)
+  ```
+
+- **`runAll()`** - Execute runnables with bounded concurrency (no results)
+  ```java
+  List<String> files = List.of("file1.txt", "file2.txt", "file3.txt");
+  VirtualThreads.runAll(files, filename -> processFile(filename), 5);
+  ```
+
+- **`isVirtual()`** / **`checkIsVirtual()`** - Detect if running on a virtual thread
+  ```java
+  if (VirtualThreads.isVirtual()) {
+      // Safe to block on I/O without hurting throughput
+  }
+  ```
+
+- **`onVirtualThread()`** - Execute a task on a virtual thread if not already on one
+  ```java
+  String result = VirtualThreads.onVirtualThread(() -> blockingDatabaseCall());
+  ```
+
+- [Javadoc](https://javadoc.io/doc/com.autonomouslogic.commons/commons-java/latest/com/autonomouslogic/commons/concurrent/VirtualThreads.html)
+- [Source](https://github.com/autonomouslogic/commons-java/blob/main/src/main/java/com/autonomouslogic/commons/concurrent/VirtualThreads.java)
+- [Oracle Virtual Threads Documentation](https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html)
+- [JEP 444: Virtual Threads](https://openjdk.org/jeps/444)
+
 ## Other Common Libraries
 
 * [Apache Commons](https://commons.apache.org/)

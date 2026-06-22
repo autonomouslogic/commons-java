@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -15,6 +16,65 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import lombok.NonNull;
 
+/**
+ * Utilities for executing tasks on virtual threads with bounded concurrency.
+ *
+ * <p><b>What are virtual threads?</b>
+ * Virtual threads are lightweight threads managed by the JVM.
+ * Unlike traditional platform threads (which map 1:1 to OS threads), many virtual threads can run on a single
+ * platform thread, making them extremely cheap to create and suspend. They're ideal for I/O-bound workloads.
+ *
+ * <p><b>When to use this class:</b>
+ * <ul>
+ *   <li><b>I/O-bound tasks:</b> Calling APIs, reading files, database queries. Virtual threads excel here because
+ *       they efficiently handle blocking operations without tying up platform threads.</li>
+ *   <li><b>Bounded concurrency needed:</b> You want parallelism but need to limit it (e.g., API rate limits,
+ *       database connection pools). Use {@code maxConcurrency} to control resource usage.</li>
+ *   <li><b>Result ordering matters:</b> Methods return results in submission order, making it easy to correlate
+ *       inputs with outputs.</li>
+ *   <li><b>Fail-fast semantics preferred:</b> If one task fails, the remaining tasks are canceled immediately.</li>
+ * </ul>
+ *
+ * <p><b>Usage examples:</b>
+ *
+ * <p><i>Execute callables and get results in order:</i>
+ * <pre>{@code
+ * List<String> urls = List.of("http://api1.com", "http://api2.com", "http://api3.com");
+ * List<String> responses = VirtualThreads.callAll(
+ *     urls,
+ *     url -> fetchContent(url),
+ *     2  // max 2 concurrent requests
+ * );
+ * // responses.get(0) corresponds to urls.get(0), etc.
+ * }</pre>
+ *
+ * <p><i>Execute runnables with bounded concurrency:</i>
+ * <pre>{@code
+ * List<String> files = List.of("file1.txt", "file2.txt", "file3.txt");
+ * VirtualThreads.runAll(
+ *     files,
+ *     filename -> processFile(filename),
+ *     5  // max 5 concurrent file operations
+ * );
+ * }</pre>
+ *
+ * <p><i>Check if running on a virtual thread:</i>
+ * <pre>{@code
+ * if (VirtualThreads.isVirtual()) {
+ *     // Safe to block on I/O without harming throughput
+ *     var data = readDataFromDatabase();
+ * }
+ * }</pre>
+ *
+ * <p><b>Error handling:</b> The first task failure causes all remaining tasks to be canceled (via
+ * {@link ExecutorService#shutdownNow()}). The exception is propagated to the caller. The executor is cleaned up
+ * properly in all cases (success, failure, interruption).
+ *
+ * @see Thread#ofVirtual()
+ * @see Executors#newVirtualThreadPerTaskExecutor()
+ * @see <a href="https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html">Oracle Virtual Threads Documentation</a>
+ * @see <a href="https://openjdk.org/jeps/444">JEP 444: Virtual Threads</a>
+ */
 public class VirtualThreads {
 	/**
 	 * Executes tasks on virtual threads with bounded concurrency.
