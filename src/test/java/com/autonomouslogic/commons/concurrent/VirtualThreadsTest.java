@@ -1,6 +1,7 @@
 package com.autonomouslogic.commons.concurrent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,7 +12,9 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Nested;
@@ -521,7 +524,7 @@ class VirtualThreadsTest {
 			});
 
 			assertEquals(1, executed.get());
-			assertTrue(Thread.currentThread().threadId() != threadId.get());
+			assertNotEquals(Thread.currentThread().threadId(), threadId.get());
 		}
 
 		@Test
@@ -549,16 +552,83 @@ class VirtualThreadsTest {
 		}
 
 		@Test
-		void callableShouldPropagateException() throws Exception {
+		void callableShouldPropagateException() {
 			var failureMessage = "Test failure";
 
+			Callable<Void> task = () -> {
+				throw new RuntimeException(failureMessage);
+			};
 			var exception = assertThrows(
 					RuntimeException.class,
-					() -> VirtualThreads.onVirtualThread(() -> {
-						throw new RuntimeException(failureMessage);
-					}));
+					() -> VirtualThreads.onVirtualThread(task));
 
 			assertEquals(failureMessage, exception.getMessage());
+		}
+
+		@Test
+		void runnableShouldPropagateException() {
+			var failureMessage = "Test failure";
+
+			Runnable task = () -> {
+				throw new RuntimeException(failureMessage);
+			};
+			var exception = assertThrows(
+					RuntimeException.class,
+					() -> VirtualThreads.onVirtualThread(task));
+
+			assertEquals(failureMessage, exception.getMessage());
+		}
+
+		@Test
+		void runnableShouldPropagateExceptionWhenAlreadyOnVirtualThread() throws Exception {
+			var failureMessage = "Test failure on virtual thread";
+			var exceptionThrown = new AtomicBoolean();
+			var exceptionMessage = new AtomicReference<String>();
+
+			var virtualThread = Thread.ofVirtual().start(() -> {
+				Runnable task = () -> {
+					throw new RuntimeException(failureMessage);
+				};
+				try {
+					VirtualThreads.onVirtualThread(task);
+				} catch (RuntimeException e) {
+					exceptionThrown.set(true);
+					exceptionMessage.set(e.getMessage());
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			});
+
+			virtualThread.join();
+
+			assertTrue(exceptionThrown.get());
+			assertEquals(failureMessage, exceptionMessage.get());
+		}
+
+		@Test
+		void callableShouldPropagateExceptionWhenAlreadyOnVirtualThread() throws Exception {
+			var failureMessage = "Test failure on virtual thread";
+			var exceptionThrown = new AtomicBoolean();
+			var exceptionMessage = new AtomicReference<String>();
+
+			var virtualThread = Thread.ofVirtual().start(() -> {
+				Callable<Void> task = () -> {
+					throw new RuntimeException(failureMessage);
+				};
+				try {
+					VirtualThreads.onVirtualThread(task);
+				} catch (RuntimeException e) {
+					exceptionThrown.set(true);
+					exceptionMessage.set(e.getMessage());
+				} catch (Exception e) {
+					Thread.currentThread().interrupt();
+				}
+			});
+
+			virtualThread.join();
+
+			assertTrue(exceptionThrown.get());
+			assertEquals(failureMessage, exceptionMessage.get());
 		}
 	}
 }

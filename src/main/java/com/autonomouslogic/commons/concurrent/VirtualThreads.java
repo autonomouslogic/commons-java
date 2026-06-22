@@ -354,8 +354,18 @@ public class VirtualThreads {
 		if (isVirtual()) {
 			task.run();
 		} else {
-			var thread = Thread.ofVirtual().start(task);
+			var exception = new AtomicReference<RuntimeException>();
+			var thread = Thread.ofVirtual().start(() -> {
+				try {
+					task.run();
+				} catch (RuntimeException e) {
+					exception.set(e);
+				}
+			});
 			thread.join();
+			if (exception.get() != null) {
+				throw exception.get();
+			}
 		}
 	}
 
