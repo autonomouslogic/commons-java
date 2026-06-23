@@ -1,5 +1,23 @@
 Commons Java Changelog
 
+## [1.11.1](https://github.com/autonomouslogic/commons-java/compare/1.11.0...1.11.1) (2026-06-23)
+
+
+### Bug Fixes
+
+* Fixed exception handling in VirtualThreads onVirtualThread for Runnable ([4d0d419](https://github.com/autonomouslogic/commons-java/commit/4d0d4191fb2b89c55f1d72eba3f05dd82ef80f8a))
+
+
+### Documentation
+
+* VirtualThreads documentation ([#107](https://github.com/autonomouslogic/commons-java/issues/107)) ([8b23299](https://github.com/autonomouslogic/commons-java/commit/8b232997173c207e1edee427d2bb35f44e986325))
+
+
+### Miscellaneous Chores
+
+* **deps:** update plugin io.freefair.lombok to v9 ([#88](https://github.com/autonomouslogic/commons-java/issues/88)) ([4c32b96](https://github.com/autonomouslogic/commons-java/commit/4c32b96425c0a4c753cc202ce7a936a44c6f8fc8))
+* **deps:** update plugin org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin to v7 ([#84](https://github.com/autonomouslogic/commons-java/issues/84)) ([08965a8](https://github.com/autonomouslogic/commons-java/commit/08965a8f1e50392210c200eb08d56d09a3d02d74))
+
 ## [1.11.0](https://github.com/autonomouslogic/commons-java/compare/1.10.0...1.11.0) (2026-06-21)
 
 
