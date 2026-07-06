@@ -558,9 +558,7 @@ class VirtualThreadsTest {
 			Callable<Void> task = () -> {
 				throw new RuntimeException(failureMessage);
 			};
-			var exception = assertThrows(
-					RuntimeException.class,
-					() -> VirtualThreads.onVirtualThread(task));
+			var exception = assertThrows(RuntimeException.class, () -> VirtualThreads.onVirtualThread(task));
 
 			assertEquals(failureMessage, exception.getMessage());
 		}
@@ -572,9 +570,7 @@ class VirtualThreadsTest {
 			Runnable task = () -> {
 				throw new RuntimeException(failureMessage);
 			};
-			var exception = assertThrows(
-					RuntimeException.class,
-					() -> VirtualThreads.onVirtualThread(task));
+			var exception = assertThrows(RuntimeException.class, () -> VirtualThreads.onVirtualThread(task));
 
 			assertEquals(failureMessage, exception.getMessage());
 		}
