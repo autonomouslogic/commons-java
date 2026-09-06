@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -728,6 +729,194 @@ class VirtualThreadsTest {
 				return null;
 			};
 			assertThrows(IOException.class, () -> VirtualThreads.onVirtualThread(task));
+		}
+	}
+
+	@Nested
+	class InterruptedCallerCancelsSpawnedTaskTests {
+		@Test
+		@Timeout(10)
+		void onVirtualThreadRunnableShouldCancelSpawnedTask() throws Exception {
+			var taskStarted = new CountDownLatch(1);
+			var taskInterrupted = new CountDownLatch(1);
+			var blocker = new CountDownLatch(1);
+			var callerInterrupted = new AtomicBoolean();
+
+			Runnable task = () -> {
+				taskStarted.countDown();
+				try {
+					blocker.await();
+				} catch (InterruptedException e) {
+					taskInterrupted.countDown();
+				}
+			};
+			var caller = new Thread(() -> {
+				try {
+					VirtualThreads.onVirtualThread(task);
+				} catch (InterruptedException e) {
+					callerInterrupted.set(true);
+				}
+			});
+
+			try {
+				caller.start();
+				assertTrue(taskStarted.await(2, TimeUnit.SECONDS), "task should have started");
+				caller.interrupt();
+				caller.join(2000);
+				assertTrue(callerInterrupted.get(), "caller should observe the InterruptedException");
+				assertTrue(
+						taskInterrupted.await(500, TimeUnit.MILLISECONDS),
+						"spawned virtual thread should be interrupted when the waiting caller is interrupted, "
+								+ "but it was left running");
+			} finally {
+				blocker.countDown();
+			}
+		}
+
+		@Test
+		@Timeout(10)
+		void onVirtualThreadCallableShouldCancelSpawnedTask() throws Exception {
+			var taskStarted = new CountDownLatch(1);
+			var taskInterrupted = new CountDownLatch(1);
+			var blocker = new CountDownLatch(1);
+			var callerInterrupted = new AtomicBoolean();
+
+			Callable<Void> task = () -> {
+				taskStarted.countDown();
+				try {
+					blocker.await();
+				} catch (InterruptedException e) {
+					taskInterrupted.countDown();
+				}
+				return null;
+			};
+			var caller = new Thread(() -> {
+				try {
+					VirtualThreads.onVirtualThread(task);
+				} catch (InterruptedException e) {
+					callerInterrupted.set(true);
+				} catch (Exception e) {
+					Thread.currentThread().interrupt();
+				}
+			});
+
+			try {
+				caller.start();
+				assertTrue(taskStarted.await(2, TimeUnit.SECONDS), "task should have started");
+				caller.interrupt();
+				caller.join(2000);
+				assertTrue(callerInterrupted.get(), "caller should observe the InterruptedException");
+				assertTrue(
+						taskInterrupted.await(500, TimeUnit.MILLISECONDS),
+						"spawned virtual thread should be interrupted when the waiting caller is interrupted, "
+								+ "but it was left running");
+			} finally {
+				blocker.countDown();
+			}
+		}
+
+		@Test
+		@Timeout(10)
+		void callAllShouldCancelSpawnedTasksWhenCallerInterrupted() throws Exception {
+			var tasksStarted = new CountDownLatch(2);
+			var tasksInterrupted = new CountDownLatch(2);
+			var blocker = new CountDownLatch(1);
+			var callerInterrupted = new AtomicBoolean();
+
+			var tasks = List.<Callable<Void>>of(
+					() -> {
+						tasksStarted.countDown();
+						try {
+							blocker.await();
+						} catch (InterruptedException e) {
+							tasksInterrupted.countDown();
+						}
+						return null;
+					},
+					() -> {
+						tasksStarted.countDown();
+						try {
+							blocker.await();
+						} catch (InterruptedException e) {
+							tasksInterrupted.countDown();
+						}
+						return null;
+					});
+
+			var caller = new Thread(() -> {
+				try {
+					VirtualThreads.callAll(tasks, 2);
+				} catch (InterruptedException e) {
+					callerInterrupted.set(true);
+				} catch (ExecutionException e) {
+					Thread.currentThread().interrupt();
+				}
+			});
+
+			try {
+				caller.start();
+				assertTrue(tasksStarted.await(2, TimeUnit.SECONDS), "tasks should have started");
+				caller.interrupt();
+				caller.join(2000);
+				assertTrue(callerInterrupted.get(), "caller should observe the InterruptedException");
+				assertTrue(
+						tasksInterrupted.await(500, TimeUnit.MILLISECONDS),
+						"spawned virtual threads should be interrupted when the waiting caller is interrupted, "
+								+ "but they were left running");
+			} finally {
+				blocker.countDown();
+			}
+		}
+
+		@Test
+		@Timeout(10)
+		void runAllShouldCancelSpawnedTasksWhenCallerInterrupted() throws Exception {
+			var tasksStarted = new CountDownLatch(2);
+			var tasksInterrupted = new CountDownLatch(2);
+			var blocker = new CountDownLatch(1);
+			var callerInterrupted = new AtomicBoolean();
+
+			var tasks = List.<Runnable>of(
+					() -> {
+						tasksStarted.countDown();
+						try {
+							blocker.await();
+						} catch (InterruptedException e) {
+							tasksInterrupted.countDown();
+						}
+					},
+					() -> {
+						tasksStarted.countDown();
+						try {
+							blocker.await();
+						} catch (InterruptedException e) {
+							tasksInterrupted.countDown();
+						}
+					});
+
+			var caller = new Thread(() -> {
+				try {
+					VirtualThreads.runAll(tasks, 2);
+				} catch (InterruptedException e) {
+					callerInterrupted.set(true);
+				} catch (ExecutionException e) {
+					Thread.currentThread().interrupt();
+				}
+			});
+
+			try {
+				caller.start();
+				assertTrue(tasksStarted.await(2, TimeUnit.SECONDS), "tasks should have started");
+				caller.interrupt();
+				caller.join(2000);
+				assertTrue(callerInterrupted.get(), "caller should observe the InterruptedException");
+				assertTrue(
+						tasksInterrupted.await(500, TimeUnit.MILLISECONDS),
+						"spawned virtual threads should be interrupted when the waiting caller is interrupted, "
+								+ "but they were left running");
+			} finally {
+				blocker.countDown();
+			}
 		}
 	}
 

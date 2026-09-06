@@ -10,7 +10,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -27,8 +26,6 @@ import org.junit.jupiter.api.Timeout;
  *
  * <p>Issues demonstrated:
  * <ol>
- *   <li><b>Task leak on caller interruption in {@code onVirtualThread}</b> (major): if the caller is interrupted
- *       while joining, the spawned virtual thread is never interrupted and keeps running unobserved.</li>
  *   <li><b>Eager input materialisation</b> (major): the {@code Iterator}/{@code Iterable} + {@code Function}/
  *       {@code Consumer} overloads drain the entire input into an {@code ArrayList} before executing anything.
  *       This defeats bounded-memory streaming, prevents overlap of input production and task execution, hangs
@@ -44,52 +41,6 @@ import org.junit.jupiter.api.Timeout;
  * </ol>
  */
 class VirtualThreadsShortcomingsTest {
-	/**
-	 * Issue 1: when the caller of onVirtualThread is interrupted while waiting in join(), the spawned
-	 * virtual thread is left running with nobody observing its outcome.
-	 */
-	@Nested
-	class OnVirtualThreadInterruptLeak {
-		@Test
-		@Timeout(10)
-		void interruptedCallerShouldCancelSpawnedTask() throws Exception {
-			var taskStarted = new CountDownLatch(1);
-			var taskInterrupted = new CountDownLatch(1);
-			var blocker = new CountDownLatch(1);
-			var callerInterrupted = new AtomicBoolean();
-
-			Runnable task = () -> {
-				taskStarted.countDown();
-				try {
-					blocker.await();
-				} catch (InterruptedException e) {
-					taskInterrupted.countDown();
-				}
-			};
-			var caller = new Thread(() -> {
-				try {
-					VirtualThreads.onVirtualThread(task);
-				} catch (InterruptedException e) {
-					callerInterrupted.set(true);
-				}
-			});
-
-			try {
-				caller.start();
-				assertTrue(taskStarted.await(2, TimeUnit.SECONDS), "task should have started");
-				caller.interrupt();
-				caller.join(2000);
-				assertTrue(callerInterrupted.get(), "caller should observe the InterruptedException");
-				assertTrue(
-						taskInterrupted.await(500, TimeUnit.MILLISECONDS),
-						"spawned virtual thread should be interrupted when the waiting caller is interrupted, "
-								+ "but it was left running");
-			} finally {
-				blocker.countDown();
-			}
-		}
-	}
-
 	/**
 	 * Issue 3: the Iterator + Function/Consumer overloads materialise all inputs up front instead of
 	 * consuming them lazily as concurrency slots free up. The Stream overloads are lazy, so identical

@@ -387,7 +387,12 @@ public class VirtualThreads {
 					exception.set(e);
 				}
 			});
-			thread.join();
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				thread.interrupt();
+				throw e;
+			}
 			if (exception.get() != null) {
 				sneakyThrow(exception.get());
 			}
@@ -417,7 +422,12 @@ public class VirtualThreads {
 					thrown.set(e);
 				}
 			});
-			thread.join();
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				thread.interrupt();
+				throw e;
+			}
 			if (thrown.get() != null) {
 				sneakyThrow(thrown.get());
 			}
