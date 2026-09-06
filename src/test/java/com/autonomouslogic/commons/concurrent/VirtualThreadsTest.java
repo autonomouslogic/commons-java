@@ -1,11 +1,13 @@
 package com.autonomouslogic.commons.concurrent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -159,6 +161,35 @@ class VirtualThreadsTest {
 				assertEquals(i, results.get(i));
 			}
 		}
+
+		@Test
+		void shouldCaptureError() throws Exception {
+			Callable<Void> task = () -> {
+				throw new Error("boom");
+			};
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(List.of(task), 1));
+			assertInstanceOf(Error.class, ex.getCause());
+		}
+
+		@Test
+		void shouldCaptureManualSneakyCheckedException() throws Exception {
+			Callable<Void> task = () -> {
+				sneakyThrow(new IOException("boom"));
+				return null;
+			};
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(List.of(task), 1));
+			assertInstanceOf(IOException.class, ex.getCause());
+		}
+
+		@Test
+		void shouldCaptureLombokSneakyThrowsException() throws Exception {
+			Callable<Void> task = () -> {
+				throwSneakyCheckedException();
+				return null;
+			};
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(List.of(task), 1));
+			assertInstanceOf(IOException.class, ex.getCause());
+		}
 	}
 
 	@Nested
@@ -287,6 +318,29 @@ class VirtualThreadsTest {
 			VirtualThreads.runAll(tasks, 5);
 
 			assertEquals(10, tasksRun.get());
+		}
+
+		@Test
+		void shouldCaptureError() throws Exception {
+			Runnable task = () -> {
+				throw new Error("boom");
+			};
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(List.of(task), 1));
+			assertInstanceOf(Error.class, ex.getCause());
+		}
+
+		@Test
+		void shouldCaptureManualSneakyCheckedException() throws Exception {
+			Runnable task = () -> sneakyThrow(new IOException("boom"));
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(List.of(task), 1));
+			assertInstanceOf(IOException.class, ex.getCause());
+		}
+
+		@Test
+		void shouldCaptureLombokSneakyThrowsException() throws Exception {
+			Runnable task = VirtualThreadsTest::throwSneakyCheckedException;
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(List.of(task), 1));
+			assertInstanceOf(IOException.class, ex.getCause());
 		}
 	}
 
@@ -576,6 +630,22 @@ class VirtualThreadsTest {
 		}
 
 		@Test
+		void runnableShouldCaptureError() {
+			Runnable task = () -> {
+				throw new Error("boom");
+			};
+			assertThrows(Error.class, () -> VirtualThreads.onVirtualThread(task));
+		}
+
+		@Test
+		void callableShouldCaptureError() {
+			Callable<Void> task = () -> {
+				throw new Error("boom");
+			};
+			assertThrows(Error.class, () -> VirtualThreads.onVirtualThread(task));
+		}
+
+		@Test
 		void runnableShouldPropagateExceptionWhenAlreadyOnVirtualThread() throws Exception {
 			var failureMessage = "Test failure on virtual thread";
 			var exceptionThrown = new AtomicBoolean();
@@ -626,5 +696,45 @@ class VirtualThreadsTest {
 			assertTrue(exceptionThrown.get());
 			assertEquals(failureMessage, exceptionMessage.get());
 		}
+
+		@Test
+		void runnableShouldCaptureManualSneakyCheckedException() {
+			Runnable task = () -> sneakyThrow(new IOException("boom"));
+			assertThrows(IOException.class, () -> VirtualThreads.onVirtualThread(task));
+		}
+
+		@Test
+		void runnableShouldCaptureLombokSneakyThrowsException() {
+			Runnable task = VirtualThreadsTest::throwSneakyCheckedException;
+			assertThrows(IOException.class, () -> VirtualThreads.onVirtualThread(task));
+		}
+
+		@Test
+		void callableShouldCaptureManualSneakyCheckedException() {
+			Callable<Void> task = () -> {
+				sneakyThrow(new IOException("boom"));
+				return null;
+			};
+			assertThrows(IOException.class, () -> VirtualThreads.onVirtualThread(task));
+		}
+
+		@Test
+		void callableShouldCaptureLombokSneakyThrowsException() {
+			Callable<Void> task = () -> {
+				throwSneakyCheckedException();
+				return null;
+			};
+			assertThrows(IOException.class, () -> VirtualThreads.onVirtualThread(task));
+		}
+	}
+
+	@lombok.SneakyThrows
+	private static void throwSneakyCheckedException() {
+		throw new IOException("sneaky checked via @SneakyThrows");
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
+		throw (E) e;
 	}
 }

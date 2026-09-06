@@ -1,11 +1,9 @@
 package com.autonomouslogic.commons.concurrent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -30,12 +28,6 @@ import org.junit.jupiter.api.Timeout;
  *
  * <p>Issues demonstrated:
  * <ol>
- *   <li><b>Error/Throwable swallowing in {@code onVirtualThread}</b> (major): when called from a platform thread,
- *       only {@code RuntimeException} (Runnable variant) or {@code Exception} (Callable variant) is captured.
- *       {@code Error}s and sneakily-thrown checked exceptions escape to the virtual thread's uncaught handler and
- *       the method returns normally (the Callable variant returns {@code null}), silently reporting success.
- *       When already on a virtual thread the same throwable propagates, so behaviour depends on the calling
- *       context.</li>
  *   <li><b>Task leak on caller interruption in {@code onVirtualThread}</b> (major): if the caller is interrupted
  *       while joining, the spawned virtual thread is never interrupted and keeps running unobserved.</li>
  *   <li><b>Eager input materialisation</b> (major): the {@code Iterator}/{@code Iterable} + {@code Function}/
@@ -57,124 +49,7 @@ import org.junit.jupiter.api.Timeout;
  */
 class VirtualThreadsShortcomingsTest {
 	/**
-	 * Issue 1: onVirtualThread only captures RuntimeException/Exception from the spawned virtual thread.
-	 * Errors and sneaky checked throwables are lost and the method reports success.
-	 */
-	@Nested
-	class OnVirtualThreadThrowableSwallowing {
-		@Test
-		@Timeout(10)
-		void runnableErrorsShouldPropagateFromPlatformThreads() {
-			// On a virtual thread, task.run() is inlined and this AssertionError propagates to the caller.
-			// On a platform thread, it is silently dropped and onVirtualThread returns normally.
-			Runnable task = () -> {
-				throw new AssertionError("boom");
-			};
-			assertThrows(AssertionError.class, () -> VirtualThreads.onVirtualThread(task));
-		}
-
-		@Test
-		@Timeout(10)
-		void callableErrorsShouldPropagateFromPlatformThreads() {
-			// Currently returns null instead of throwing: the AssertionError goes to the uncaught
-			// exception handler and the result AtomicReference is never set.
-			Callable<Integer> task = () -> {
-				throw new AssertionError("boom");
-			};
-			assertThrows(AssertionError.class, () -> VirtualThreads.onVirtualThread(task));
-		}
-
-		@Test
-		@Timeout(10)
-		void runnableSneakyCheckedExceptionsShouldPropagateFromPlatformThreads() {
-			// Runnables can throw checked exceptions via sneaky-throw (e.g. Lombok's @SneakyThrows).
-			// catch (RuntimeException) misses them, so the failure is silently dropped.
-			Runnable task = () -> sneakyThrow(new IOException("boom"));
-			assertThrows(Throwable.class, () -> VirtualThreads.onVirtualThread(task));
-		}
-
-		@Test
-		@Timeout(10)
-		void runnableLombokSneakyThrowsShouldPropagateFromPlatformThreads() {
-			// @SneakyThrows bytecode-rewrites the throw so the JVM sees an unchecked throw at runtime,
-			// but the caller's catch (RuntimeException) still misses it — IOException is not a RuntimeException.
-			// The result is the same silent drop as the manual sneaky-throw above, but this test uses the
-			// real Lombok annotation to confirm the behaviour is not an artifact of the manual helper.
-			Runnable task = OnVirtualThreadThrowableSwallowing::throwSneakyCheckedException;
-			assertThrows(IOException.class, () -> VirtualThreads.onVirtualThread(task));
-		}
-
-		@Test
-		@Timeout(10)
-		void runAllShouldCaptureAssertionError() throws Exception {
-			Runnable task = () -> {
-				throw new AssertionError("boom");
-			};
-			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(List.of(task), 1));
-			assertInstanceOf(AssertionError.class, ex.getCause());
-		}
-
-		@Test
-		@Timeout(10)
-		void callAllShouldCaptureAssertionError() throws Exception {
-			Callable<Void> task = () -> {
-				throw new AssertionError("boom");
-			};
-			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(List.of(task), 1));
-			assertInstanceOf(AssertionError.class, ex.getCause());
-		}
-
-		@Test
-		@Timeout(10)
-		void runAllShouldCaptureManualSneakyCheckedException() throws Exception {
-			Runnable task = () -> sneakyThrow(new IOException("boom"));
-			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(List.of(task), 1));
-			assertInstanceOf(IOException.class, ex.getCause());
-		}
-
-		@Test
-		@Timeout(10)
-		void callAllShouldCaptureManualSneakyCheckedException() throws Exception {
-			Callable<Void> task = () -> {
-				sneakyThrow(new IOException("boom"));
-				return null;
-			};
-			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(List.of(task), 1));
-			assertInstanceOf(IOException.class, ex.getCause());
-		}
-
-		@Test
-		@Timeout(10)
-		void runAllShouldCaptureLombokSneakyThrows() throws Exception {
-			Runnable task = OnVirtualThreadThrowableSwallowing::throwSneakyCheckedException;
-			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(List.of(task), 1));
-			assertInstanceOf(IOException.class, ex.getCause());
-		}
-
-		@Test
-		@Timeout(10)
-		void callAllShouldCaptureLombokSneakyThrows() throws Exception {
-			Callable<Void> task = () -> {
-				throwSneakyCheckedException();
-				return null;
-			};
-			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(List.of(task), 1));
-			assertInstanceOf(IOException.class, ex.getCause());
-		}
-
-		@lombok.SneakyThrows
-		private static void throwSneakyCheckedException() {
-			throw new IOException("sneaky checked via @SneakyThrows");
-		}
-
-		@SuppressWarnings("unchecked")
-		private static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
-			throw (E) e;
-		}
-	}
-
-	/**
-	 * Issue 2: when the caller of onVirtualThread is interrupted while waiting in join(), the spawned
+	 * Issue 1: when the caller of onVirtualThread is interrupted while waiting in join(), the spawned
 	 * virtual thread is left running with nobody observing its outcome.
 	 */
 	@Nested
