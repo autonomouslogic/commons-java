@@ -354,17 +354,17 @@ public class VirtualThreads {
 		if (isVirtual()) {
 			task.run();
 		} else {
-			var exception = new AtomicReference<RuntimeException>();
+			var exception = new AtomicReference<Throwable>();
 			var thread = Thread.ofVirtual().start(() -> {
 				try {
 					task.run();
-				} catch (RuntimeException e) {
+				} catch (Throwable e) {
 					exception.set(e);
 				}
 			});
 			thread.join();
 			if (exception.get() != null) {
-				throw exception.get();
+				sneakyThrow(exception.get());
 			}
 		}
 	}
@@ -384,20 +384,25 @@ public class VirtualThreads {
 			return task.call();
 		} else {
 			var result = new AtomicReference<T>();
-			var exception = new AtomicReference<Exception>();
+			var thrown = new AtomicReference<Throwable>();
 			var thread = Thread.ofVirtual().start(() -> {
 				try {
 					result.set(task.call());
-				} catch (Exception e) {
-					exception.set(e);
+				} catch (Throwable e) {
+					thrown.set(e);
 				}
 			});
 			thread.join();
-			if (exception.get() != null) {
-				throw exception.get();
+			if (thrown.get() != null) {
+				sneakyThrow(thrown.get());
 			}
 			return result.get();
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
+		throw (E) e;
 	}
 
 	private static final class Result<T> {
