@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
@@ -126,6 +127,18 @@ public class VirtualThreads {
 							e.addSuppressed(interrupted);
 						}
 
+						for (int remaining = inFlight - 1; remaining > 0; remaining--) {
+							var future = completion.poll();
+							if (future != null) {
+								try {
+									future.get();
+								} catch (ExecutionException suppressed) {
+									e.addSuppressed(suppressed);
+								} catch (CancellationException | InterruptedException ignored) {
+								}
+							}
+						}
+
 						throw e;
 					}
 				} catch (InterruptedException e) {
@@ -207,6 +220,18 @@ public class VirtualThreads {
 						} catch (InterruptedException interrupted) {
 							Thread.currentThread().interrupt();
 							e.addSuppressed(interrupted);
+						}
+
+						for (int remaining = inFlight - 1; remaining > 0; remaining--) {
+							var future = completion.poll();
+							if (future != null) {
+								try {
+									future.get();
+								} catch (ExecutionException suppressed) {
+									e.addSuppressed(suppressed);
+								} catch (CancellationException | InterruptedException ignored) {
+								}
+							}
 						}
 
 						throw e;

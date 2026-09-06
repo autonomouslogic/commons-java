@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -727,6 +728,75 @@ class VirtualThreadsTest {
 				return null;
 			};
 			assertThrows(IOException.class, () -> VirtualThreads.onVirtualThread(task));
+		}
+	}
+
+	@Nested
+	class ConcurrentFailuresTests {
+		@Test
+		@Timeout(10)
+		void callAllShouldRetainConcurrentFailuresAsSuppressed() throws Exception {
+			var secondaryStarted = new CountDownLatch(1);
+
+			Callable<Integer> primary = () -> {
+				secondaryStarted.await();
+				throw new IllegalStateException("primary failure");
+			};
+			Callable<Integer> secondary = () -> {
+				secondaryStarted.countDown();
+				try {
+					Thread.sleep(30_000);
+					return 2;
+				} catch (InterruptedException e) {
+					throw new IllegalStateException("secondary failure");
+				}
+			};
+
+			var thrown = assertThrows(
+					ExecutionException.class, () -> VirtualThreads.callAll(List.of(primary, secondary), 2));
+
+			assertEquals("primary failure", thrown.getCause().getMessage());
+			assertTrue(
+					Arrays.stream(thrown.getSuppressed())
+							.anyMatch(s -> String.valueOf(s.getMessage()).contains("secondary failure")
+									|| String.valueOf(s.getCause()).contains("secondary failure")),
+					"failures of other in-flight tasks should be retained as suppressed exceptions, "
+							+ "but were dropped: " + Arrays.toString(thrown.getSuppressed()));
+		}
+
+		@Test
+		@Timeout(10)
+		void runAllShouldRetainConcurrentFailuresAsSuppressed() throws Exception {
+			var secondaryStarted = new CountDownLatch(1);
+
+			Runnable primary = () -> {
+				try {
+					secondaryStarted.await();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					return;
+				}
+				throw new IllegalStateException("primary failure");
+			};
+			Runnable secondary = () -> {
+				secondaryStarted.countDown();
+				try {
+					Thread.sleep(30_000);
+				} catch (InterruptedException e) {
+					throw new IllegalStateException("secondary failure");
+				}
+			};
+
+			var thrown =
+					assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(List.of(primary, secondary), 2));
+
+			assertEquals("primary failure", thrown.getCause().getMessage());
+			assertTrue(
+					Arrays.stream(thrown.getSuppressed())
+							.anyMatch(s -> String.valueOf(s.getMessage()).contains("secondary failure")
+									|| String.valueOf(s.getCause()).contains("secondary failure")),
+					"failures of other in-flight tasks should be retained as suppressed exceptions, "
+							+ "but were dropped: " + Arrays.toString(thrown.getSuppressed()));
 		}
 	}
 

@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -42,9 +41,6 @@ import org.junit.jupiter.api.Timeout;
  *   <li><b>Hidden 5-second stall on fail-fast</b> (medium): after a task failure, the hard-coded
  *       {@code awaitTermination(5, SECONDS)} delays exception propagation by up to 5 seconds when a task ignores
  *       interruption, and its return value is ignored, so tasks may still be running when the method throws.</li>
- *   <li><b>Concurrent failures dropped</b> (medium): only the first observed {@code ExecutionException}
- *       propagates; failures of other in-flight tasks are silently discarded instead of being attached as
- *       suppressed exceptions.</li>
  * </ol>
  */
 class VirtualThreadsShortcomingsTest {
@@ -294,44 +290,6 @@ class VirtualThreadsShortcomingsTest {
 					"task failure should propagate promptly, but took " + elapsedMs
 							+ "ms because of the hard-coded 5s awaitTermination on an uncooperative task "
 							+ "(whose continued execution after the throw is also not reported)");
-		}
-	}
-
-	/**
-	 * Issue 6: when several in-flight tasks fail, only the first failure taken from the completion queue
-	 * propagates. The other failures are dropped instead of being attached as suppressed exceptions.
-	 */
-	@Nested
-	class ConcurrentFailuresDropped {
-		@Test
-		@Timeout(10)
-		void concurrentFailuresShouldBeRetainedAsSuppressed() {
-			var secondaryStarted = new CountDownLatch(1);
-
-			Callable<Integer> primary = () -> {
-				secondaryStarted.await();
-				throw new IllegalStateException("primary failure");
-			};
-			Callable<Integer> secondary = () -> {
-				secondaryStarted.countDown();
-				try {
-					Thread.sleep(30_000);
-					return 2;
-				} catch (InterruptedException e) {
-					throw new IllegalStateException("secondary failure");
-				}
-			};
-
-			var thrown = assertThrows(
-					ExecutionException.class, () -> VirtualThreads.callAll(List.of(primary, secondary), 2));
-
-			assertEquals("primary failure", thrown.getCause().getMessage());
-			assertTrue(
-					Arrays.stream(thrown.getSuppressed())
-							.anyMatch(s -> String.valueOf(s.getMessage()).contains("secondary failure")
-									|| String.valueOf(s.getCause()).contains("secondary failure")),
-					"failures of other in-flight tasks should be retained as suppressed exceptions, "
-							+ "but were dropped: " + Arrays.toString(thrown.getSuppressed()));
 		}
 	}
 }
