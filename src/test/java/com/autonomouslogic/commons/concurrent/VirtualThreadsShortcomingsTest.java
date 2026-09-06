@@ -1,6 +1,7 @@
 package com.autonomouslogic.commons.concurrent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -90,6 +91,80 @@ class VirtualThreadsShortcomingsTest {
 			// catch (RuntimeException) misses them, so the failure is silently dropped.
 			Runnable task = () -> sneakyThrow(new IOException("boom"));
 			assertThrows(Throwable.class, () -> VirtualThreads.onVirtualThread(task));
+		}
+
+		@Test
+		@Timeout(10)
+		void runnableLombokSneakyThrowsShouldPropagateFromPlatformThreads() {
+			// @SneakyThrows bytecode-rewrites the throw so the JVM sees an unchecked throw at runtime,
+			// but the caller's catch (RuntimeException) still misses it — IOException is not a RuntimeException.
+			// The result is the same silent drop as the manual sneaky-throw above, but this test uses the
+			// real Lombok annotation to confirm the behaviour is not an artifact of the manual helper.
+			Runnable task = OnVirtualThreadThrowableSwallowing::throwSneakyCheckedException;
+			assertThrows(IOException.class, () -> VirtualThreads.onVirtualThread(task));
+		}
+
+		@Test
+		@Timeout(10)
+		void runAllShouldCaptureAssertionError() throws Exception {
+			Runnable task = () -> {
+				throw new AssertionError("boom");
+			};
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(List.of(task), 1));
+			assertInstanceOf(AssertionError.class, ex.getCause());
+		}
+
+		@Test
+		@Timeout(10)
+		void callAllShouldCaptureAssertionError() throws Exception {
+			Callable<Void> task = () -> {
+				throw new AssertionError("boom");
+			};
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(List.of(task), 1));
+			assertInstanceOf(AssertionError.class, ex.getCause());
+		}
+
+		@Test
+		@Timeout(10)
+		void runAllShouldCaptureManualSneakyCheckedException() throws Exception {
+			Runnable task = () -> sneakyThrow(new IOException("boom"));
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(List.of(task), 1));
+			assertInstanceOf(IOException.class, ex.getCause());
+		}
+
+		@Test
+		@Timeout(10)
+		void callAllShouldCaptureManualSneakyCheckedException() throws Exception {
+			Callable<Void> task = () -> {
+				sneakyThrow(new IOException("boom"));
+				return null;
+			};
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(List.of(task), 1));
+			assertInstanceOf(IOException.class, ex.getCause());
+		}
+
+		@Test
+		@Timeout(10)
+		void runAllShouldCaptureLombokSneakyThrows() throws Exception {
+			Runnable task = OnVirtualThreadThrowableSwallowing::throwSneakyCheckedException;
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.runAll(List.of(task), 1));
+			assertInstanceOf(IOException.class, ex.getCause());
+		}
+
+		@Test
+		@Timeout(10)
+		void callAllShouldCaptureLombokSneakyThrows() throws Exception {
+			Callable<Void> task = () -> {
+				throwSneakyCheckedException();
+				return null;
+			};
+			var ex = assertThrows(ExecutionException.class, () -> VirtualThreads.callAll(List.of(task), 1));
+			assertInstanceOf(IOException.class, ex.getCause());
+		}
+
+		@lombok.SneakyThrows
+		private static void throwSneakyCheckedException() {
+			throw new IOException("sneaky checked via @SneakyThrows");
 		}
 
 		@SuppressWarnings("unchecked")
