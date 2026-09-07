@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterators;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -563,46 +565,88 @@ class VirtualThreadsTest {
 
 	@Nested
 	class MaxConcurrencyValidationTests {
+		Iterator<Callable<Integer>> callableIterator(CountingIterator source) {
+			return new Iterator<>() {
+				public boolean hasNext() {
+					return source.hasNext();
+				}
+
+				public Callable<Integer> next() {
+					var i = source.next();
+					return () -> i;
+				}
+			};
+		}
+
+		Iterator<Runnable> runnableIterator(CountingIterator source) {
+			return new Iterator<>() {
+				public boolean hasNext() {
+					return source.hasNext();
+				}
+
+				public Runnable next() {
+					source.next();
+					return () -> {};
+				}
+			};
+		}
+
 		@Test
 		void callAllCallableIteratorShouldRejectInvalidMaxConcurrency() {
+			var source = new CountingIterator();
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> VirtualThreads.callAll(List.<Callable<Integer>>of().iterator(), 0));
+					() -> VirtualThreads.callAll(callableIterator(source), 0));
+			assertEquals(0, source.pulled.get());
 		}
 
 		@Test
 		void callAllCallableIterableShouldRejectInvalidMaxConcurrency() {
+			var source = new CountingIterator();
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> VirtualThreads.callAll(List.<Callable<Integer>>of(), 0));
+					() -> VirtualThreads.callAll((Iterable<Callable<Integer>>) () -> callableIterator(source), 0));
+			assertEquals(0, source.pulled.get());
 		}
 
 		@Test
 		void callAllCallableStreamShouldRejectInvalidMaxConcurrency() {
+			var source = new CountingIterator();
+			var stream = StreamSupport.stream(
+					Spliterators.spliteratorUnknownSize(callableIterator(source), 0), false);
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> VirtualThreads.callAll(Stream.<Callable<Integer>>of(), 0));
+					() -> VirtualThreads.callAll(stream, 0));
+			assertEquals(0, source.pulled.get());
 		}
 
 		@Test
 		void runAllRunnableIteratorShouldRejectInvalidMaxConcurrency() {
+			var source = new CountingIterator();
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> VirtualThreads.runAll(List.<Runnable>of().iterator(), 0));
+					() -> VirtualThreads.runAll(runnableIterator(source), 0));
+			assertEquals(0, source.pulled.get());
 		}
 
 		@Test
 		void runAllRunnableIterableShouldRejectInvalidMaxConcurrency() {
+			var source = new CountingIterator();
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> VirtualThreads.runAll(List.<Runnable>of(), 0));
+					() -> VirtualThreads.runAll((Iterable<Runnable>) () -> runnableIterator(source), 0));
+			assertEquals(0, source.pulled.get());
 		}
 
 		@Test
 		void runAllRunnableStreamShouldRejectInvalidMaxConcurrency() {
+			var source = new CountingIterator();
+			var stream = StreamSupport.stream(
+					Spliterators.spliteratorUnknownSize(runnableIterator(source), 0), false);
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> VirtualThreads.runAll(Stream.<Runnable>of(), 0));
+					() -> VirtualThreads.runAll(stream, 0));
+			assertEquals(0, source.pulled.get());
 		}
 
 		@Test
@@ -616,16 +660,21 @@ class VirtualThreadsTest {
 
 		@Test
 		void callAllFunctionIterableShouldRejectInvalidMaxConcurrency() {
+			var iterator = new CountingIterator();
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> VirtualThreads.callAll(List.<Integer>of(), i -> i, 0));
+					() -> VirtualThreads.callAll((Iterable<Integer>) () -> iterator, i -> i, 0));
+			assertEquals(0, iterator.pulled.get());
 		}
 
 		@Test
 		void callAllFunctionStreamShouldRejectInvalidMaxConcurrency() {
+			var iterator = new CountingIterator();
+			var stream = StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false);
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> VirtualThreads.callAll(Stream.<Integer>of(), i -> i, 0));
+					() -> VirtualThreads.callAll(stream, i -> i, 0));
+			assertEquals(0, iterator.pulled.get());
 		}
 
 		@Test
@@ -639,16 +688,21 @@ class VirtualThreadsTest {
 
 		@Test
 		void runAllConsumerIterableShouldRejectInvalidMaxConcurrency() {
+			var iterator = new CountingIterator();
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> VirtualThreads.runAll(List.<Integer>of(), i -> {}, 0));
+					() -> VirtualThreads.runAll((Iterable<Integer>) () -> iterator, i -> {}, 0));
+			assertEquals(0, iterator.pulled.get());
 		}
 
 		@Test
 		void runAllConsumerStreamShouldRejectInvalidMaxConcurrency() {
+			var iterator = new CountingIterator();
+			var stream = StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false);
 			assertThrows(
 					IllegalArgumentException.class,
-					() -> VirtualThreads.runAll(Stream.<Integer>of(), i -> {}, 0));
+					() -> VirtualThreads.runAll(stream, i -> {}, 0));
+			assertEquals(0, iterator.pulled.get());
 		}
 	}
 
