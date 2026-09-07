@@ -28,6 +28,20 @@ import org.junit.jupiter.api.Timeout;
 
 @Timeout(10)
 class VirtualThreadsTest {
+	class CountingIterator implements Iterator<Integer> {
+		final AtomicInteger pulled = new AtomicInteger();
+		int i = 0;
+
+		public boolean hasNext() {
+			return i < 5;
+		}
+
+		public Integer next() {
+			pulled.incrementAndGet();
+			return i++;
+		}
+	}
+
 	@Nested
 	class CallAllTests {
 		@Test
@@ -515,20 +529,6 @@ class VirtualThreadsTest {
 
 	@Nested
 	class LazyInputConsumptionTests {
-		class CountingIterator implements Iterator<Integer> {
-			final AtomicInteger pulled = new AtomicInteger();
-			int i = 0;
-
-			public boolean hasNext() {
-				return i < 5;
-			}
-
-			public Integer next() {
-				pulled.incrementAndGet();
-				return i++;
-			}
-		}
-
 		@Test
 		void callAllFunctionIteratorShouldConsumeInputsLazily() throws Exception {
 			var iterator = new CountingIterator();
@@ -558,6 +558,97 @@ class VirtualThreadsTest {
 
 			assertEquals(5, iterator.pulled.get());
 			assertEquals(1, pulledAtFirstTask.get());
+		}
+	}
+
+	@Nested
+	class MaxConcurrencyValidationTests {
+		@Test
+		void callAllCallableIteratorShouldRejectInvalidMaxConcurrency() {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.callAll(List.<Callable<Integer>>of().iterator(), 0));
+		}
+
+		@Test
+		void callAllCallableIterableShouldRejectInvalidMaxConcurrency() {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.callAll(List.<Callable<Integer>>of(), 0));
+		}
+
+		@Test
+		void callAllCallableStreamShouldRejectInvalidMaxConcurrency() {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.callAll(Stream.<Callable<Integer>>of(), 0));
+		}
+
+		@Test
+		void runAllRunnableIteratorShouldRejectInvalidMaxConcurrency() {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.runAll(List.<Runnable>of().iterator(), 0));
+		}
+
+		@Test
+		void runAllRunnableIterableShouldRejectInvalidMaxConcurrency() {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.runAll(List.<Runnable>of(), 0));
+		}
+
+		@Test
+		void runAllRunnableStreamShouldRejectInvalidMaxConcurrency() {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.runAll(Stream.<Runnable>of(), 0));
+		}
+
+		@Test
+		void callAllFunctionIteratorShouldRejectInvalidMaxConcurrency() {
+			var iterator = new CountingIterator();
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.callAll(iterator, i -> i, 0));
+			assertEquals(0, iterator.pulled.get());
+		}
+
+		@Test
+		void callAllFunctionIterableShouldRejectInvalidMaxConcurrency() {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.callAll(List.<Integer>of(), i -> i, 0));
+		}
+
+		@Test
+		void callAllFunctionStreamShouldRejectInvalidMaxConcurrency() {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.callAll(Stream.<Integer>of(), i -> i, 0));
+		}
+
+		@Test
+		void runAllConsumerIteratorShouldRejectInvalidMaxConcurrency() {
+			var iterator = new CountingIterator();
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.runAll(iterator, i -> {}, 0));
+			assertEquals(0, iterator.pulled.get());
+		}
+
+		@Test
+		void runAllConsumerIterableShouldRejectInvalidMaxConcurrency() {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.runAll(List.<Integer>of(), i -> {}, 0));
+		}
+
+		@Test
+		void runAllConsumerStreamShouldRejectInvalidMaxConcurrency() {
+			assertThrows(
+					IllegalArgumentException.class,
+					() -> VirtualThreads.runAll(Stream.<Integer>of(), i -> {}, 0));
 		}
 	}
 

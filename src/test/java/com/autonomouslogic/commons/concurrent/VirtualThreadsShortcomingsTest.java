@@ -1,6 +1,5 @@
 package com.autonomouslogic.commons.concurrent;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,7 +9,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -39,41 +37,6 @@ import org.junit.jupiter.api.Timeout;
  * </ol>
  */
 class VirtualThreadsShortcomingsTest {
-	/**
-	 * Issue 3: the Iterator + Function/Consumer overloads materialise all inputs up front instead of
-	 * consuming them lazily as concurrency slots free up. The Stream overloads are lazy, so identical
-	 * logical calls behave differently depending on the input type.
-	 */
-	@Nested
-	class EagerInputMaterialisation {
-		@Test
-		@Timeout(10)
-		void maxConcurrencyShouldBeValidatedBeforeInputsAreConsumed() {
-			var pulled = new AtomicInteger();
-			var iterator = new Iterator<Integer>() {
-				@Override
-				public boolean hasNext() {
-					return pulled.get() < 5;
-				}
-
-				@Override
-				public Integer next() {
-					return pulled.incrementAndGet();
-				}
-			};
-
-			assertThrows(IllegalArgumentException.class, () -> VirtualThreads.callAll(iterator, i -> i, 0));
-			// The current implementation drains all inputs into a list before delegating to the overload
-			// that performs the validation.
-			assertEquals(
-					0,
-					pulled.get(),
-					"maxConcurrency should be rejected before any input is consumed, but " + pulled.get()
-							+ " inputs were pulled first");
-		}
-
-	}
-
 	/**
 	 * Issue 4: when the input iterator itself throws, the pump propagates the exception but only calls
 	 * shutdown() (graceful), never shutdownNow(). Already-submitted tasks keep running unobserved after
