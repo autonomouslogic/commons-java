@@ -121,22 +121,20 @@ public class VirtualThreads {
 					} catch (ExecutionException e) {
 						executor.shutdownNow();
 
-						try {
-							executor.awaitTermination(5, TimeUnit.SECONDS);
-						} catch (InterruptedException interrupted) {
-							Thread.currentThread().interrupt();
-							e.addSuppressed(interrupted);
-						}
-
 						for (int remaining = inFlight - 1; remaining > 0; remaining--) {
-							var future = completion.poll();
-							if (future != null) {
-								try {
-									future.get();
-								} catch (ExecutionException suppressed) {
-									e.addSuppressed(suppressed);
-								} catch (CancellationException | InterruptedException ignored) {
+							try {
+								var future = completion.poll(100, TimeUnit.MILLISECONDS);
+								if (future != null) {
+									try {
+										future.get();
+									} catch (ExecutionException suppressed) {
+										e.addSuppressed(suppressed);
+									} catch (CancellationException | InterruptedException ignored) {
+									}
 								}
+							} catch (InterruptedException interrupted) {
+								Thread.currentThread().interrupt();
+								break;
 							}
 						}
 
@@ -144,13 +142,6 @@ public class VirtualThreads {
 					}
 				} catch (InterruptedException e) {
 					executor.shutdownNow();
-
-					try {
-						executor.awaitTermination(5, TimeUnit.SECONDS);
-					} catch (InterruptedException suppressed) {
-						e.addSuppressed(suppressed);
-					}
-
 					Thread.currentThread().interrupt();
 					throw e;
 				}
@@ -222,22 +213,20 @@ public class VirtualThreads {
 					} catch (ExecutionException e) {
 						executor.shutdownNow();
 
-						try {
-							executor.awaitTermination(5, TimeUnit.SECONDS);
-						} catch (InterruptedException interrupted) {
-							Thread.currentThread().interrupt();
-							e.addSuppressed(interrupted);
-						}
-
 						for (int remaining = inFlight - 1; remaining > 0; remaining--) {
-							var future = completion.poll();
-							if (future != null) {
-								try {
-									future.get();
-								} catch (ExecutionException suppressed) {
-									e.addSuppressed(suppressed);
-								} catch (CancellationException | InterruptedException ignored) {
+							try {
+								var future = completion.poll(100, TimeUnit.MILLISECONDS);
+								if (future != null) {
+									try {
+										future.get();
+									} catch (ExecutionException suppressed) {
+										e.addSuppressed(suppressed);
+									} catch (CancellationException | InterruptedException ignored) {
+									}
 								}
+							} catch (InterruptedException interrupted) {
+								Thread.currentThread().interrupt();
+								break;
 							}
 						}
 
@@ -245,13 +234,6 @@ public class VirtualThreads {
 					}
 				} catch (InterruptedException e) {
 					executor.shutdownNow();
-
-					try {
-						executor.awaitTermination(5, TimeUnit.SECONDS);
-					} catch (InterruptedException suppressed) {
-						e.addSuppressed(suppressed);
-					}
-
 					Thread.currentThread().interrupt();
 					throw e;
 				}
