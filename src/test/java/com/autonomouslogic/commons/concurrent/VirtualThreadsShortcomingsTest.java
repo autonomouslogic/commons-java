@@ -11,8 +11,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -50,50 +48,6 @@ class VirtualThreadsShortcomingsTest {
 	class EagerInputMaterialisation {
 		@Test
 		@Timeout(10)
-		void callAllFunctionIteratorShouldConsumeInputsLazily() throws Exception {
-			var inputs = List.of(0, 1, 2, 3, 4);
-			var tasksStarted = new AtomicInteger();
-			var startedWhenLastInputPulled = new AtomicInteger(-1);
-			var lazyIterator = countingIterator(inputs, tasksStarted, startedWhenLastInputPulled);
-
-			Function<Integer, Integer> fn = i -> {
-				tasksStarted.incrementAndGet();
-				return i * 2;
-			};
-			var results = VirtualThreads.callAll(lazyIterator, fn, 1);
-
-			assertEquals(List.of(0, 2, 4, 6, 8), results);
-			// With maxConcurrency=1 a lazy implementation completes each task before pulling the next
-			// input, so by the time the last input is pulled at least one task must have started.
-			// The current implementation drains the whole iterator before executing anything.
-			assertTrue(
-					startedWhenLastInputPulled.get() >= 1,
-					"inputs should be consumed lazily, but the entire iterator was drained before any task "
-							+ "started (tasks started when last input was pulled: "
-							+ startedWhenLastInputPulled.get() + ")");
-		}
-
-		@Test
-		@Timeout(10)
-		void runAllConsumerIteratorShouldConsumeInputsLazily() throws Exception {
-			var inputs = List.of(0, 1, 2, 3, 4);
-			var tasksStarted = new AtomicInteger();
-			var startedWhenLastInputPulled = new AtomicInteger(-1);
-			var lazyIterator = countingIterator(inputs, tasksStarted, startedWhenLastInputPulled);
-
-			Consumer<Integer> action = i -> tasksStarted.incrementAndGet();
-			VirtualThreads.runAll(lazyIterator, action, 1);
-
-			assertEquals(5, tasksStarted.get());
-			assertTrue(
-					startedWhenLastInputPulled.get() >= 1,
-					"inputs should be consumed lazily, but the entire iterator was drained before any task "
-							+ "started (tasks started when last input was pulled: "
-							+ startedWhenLastInputPulled.get() + ")");
-		}
-
-		@Test
-		@Timeout(10)
 		void maxConcurrencyShouldBeValidatedBeforeInputsAreConsumed() {
 			var pulled = new AtomicInteger();
 			var iterator = new Iterator<Integer>() {
@@ -118,27 +72,6 @@ class VirtualThreadsShortcomingsTest {
 							+ " inputs were pulled first");
 		}
 
-		private static Iterator<Integer> countingIterator(
-				List<Integer> inputs, AtomicInteger tasksStarted, AtomicInteger startedWhenLastInputPulled) {
-			var delegate = inputs.iterator();
-			return new Iterator<>() {
-				int pulled = 0;
-
-				@Override
-				public boolean hasNext() {
-					return delegate.hasNext();
-				}
-
-				@Override
-				public Integer next() {
-					pulled++;
-					if (pulled == inputs.size()) {
-						startedWhenLastInputPulled.set(tasksStarted.get());
-					}
-					return delegate.next();
-				}
-			};
-		}
 	}
 
 	/**

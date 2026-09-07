@@ -283,12 +283,7 @@ public class VirtualThreads {
 	 */
 	public static <T, R> List<R> callAll(@NonNull Iterator<T> inputs, @NonNull Function<T, R> fn, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
-		var tasks = new ArrayList<Callable<R>>();
-		while (inputs.hasNext()) {
-			var input = inputs.next();
-			tasks.add(() -> fn.apply(input));
-		}
-		return callAll(tasks.iterator(), maxConcurrency);
+		return callAll(new MappingIterator<>(inputs, input -> () -> fn.apply(input)), maxConcurrency);
 	}
 
 	/**
@@ -320,12 +315,7 @@ public class VirtualThreads {
 	 */
 	public static <T> void runAll(@NonNull Iterator<T> inputs, @NonNull Consumer<T> action, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
-		var tasks = new ArrayList<Runnable>();
-		while (inputs.hasNext()) {
-			var input = inputs.next();
-			tasks.add(() -> action.accept(input));
-		}
-		runAll(tasks.iterator(), maxConcurrency);
+		runAll(new MappingIterator<>(inputs, input -> () -> action.accept(input)), maxConcurrency);
 	}
 
 	/**
@@ -438,6 +428,24 @@ public class VirtualThreads {
 	@SuppressWarnings("unchecked")
 	private static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
 		throw (E) e;
+	}
+
+	private static final class MappingIterator<T, R> implements Iterator<R> {
+		private final Iterator<T> delegate;
+		private final Function<T, R> fn;
+
+		MappingIterator(Iterator<T> delegate, Function<T, R> fn) {
+			this.delegate = delegate;
+			this.fn = fn;
+		}
+
+		public boolean hasNext() {
+			return delegate.hasNext();
+		}
+
+		public R next() {
+			return fn.apply(delegate.next());
+		}
 	}
 
 	private static final class Result<T> {

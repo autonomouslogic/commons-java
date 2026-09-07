@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -509,6 +510,54 @@ class VirtualThreadsTest {
 			VirtualThreads.runAll(inputs, i -> processed.incrementAndGet(), 3);
 
 			assertEquals(5, processed.get());
+		}
+	}
+
+	@Nested
+	class LazyInputConsumptionTests {
+		class CountingIterator implements Iterator<Integer> {
+			final AtomicInteger pulled = new AtomicInteger();
+			int i = 0;
+
+			public boolean hasNext() {
+				return i < 5;
+			}
+
+			public Integer next() {
+				pulled.incrementAndGet();
+				return i++;
+			}
+		}
+
+		@Test
+		void callAllFunctionIteratorShouldConsumeInputsLazily() throws Exception {
+			var iterator = new CountingIterator();
+			var pulledAtFirstTask = new AtomicInteger(-1);
+
+			var results = VirtualThreads.callAll(
+					iterator,
+					i -> {
+						pulledAtFirstTask.compareAndSet(-1, iterator.pulled.get());
+						return i * 2;
+					},
+					1);
+
+			assertEquals(List.of(0, 2, 4, 6, 8), results);
+			assertEquals(1, pulledAtFirstTask.get());
+		}
+
+		@Test
+		void runAllConsumerIteratorShouldConsumeInputsLazily() throws Exception {
+			var iterator = new CountingIterator();
+			var pulledAtFirstTask = new AtomicInteger(-1);
+
+			VirtualThreads.runAll(
+					iterator,
+					i -> pulledAtFirstTask.compareAndSet(-1, iterator.pulled.get()),
+					1);
+
+			assertEquals(5, iterator.pulled.get());
+			assertEquals(1, pulledAtFirstTask.get());
 		}
 	}
 
