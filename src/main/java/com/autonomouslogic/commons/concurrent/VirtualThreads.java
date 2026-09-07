@@ -89,6 +89,7 @@ public class VirtualThreads {
 			throw new IllegalArgumentException("maxConcurrency must be > 0");
 		}
 		var executor = Executors.newVirtualThreadPerTaskExecutor();
+		boolean completedNormally = false;
 		try {
 			var completion = new ExecutorCompletionService<Result<T>>(executor);
 			var results = new ArrayList<T>();
@@ -154,9 +155,14 @@ public class VirtualThreads {
 					throw e;
 				}
 			}
+			completedNormally = true;
 			return results;
 		} finally {
-			executor.shutdown();
+			if (completedNormally) {
+				executor.shutdown();
+			} else {
+				executor.shutdownNow();
+			}
 		}
 	}
 
@@ -193,6 +199,7 @@ public class VirtualThreads {
 			throw new IllegalArgumentException("maxConcurrency must be > 0");
 		}
 		var executor = Executors.newVirtualThreadPerTaskExecutor();
+		boolean completedNormally = false;
 		try {
 			var completion = new ExecutorCompletionService<Void>(executor);
 			int inFlight = 0;
@@ -250,8 +257,13 @@ public class VirtualThreads {
 				}
 				inFlight--;
 			}
+			completedNormally = true;
 		} finally {
-			executor.shutdown();
+			if (completedNormally) {
+				executor.shutdown();
+			} else {
+				executor.shutdownNow();
+			}
 		}
 	}
 

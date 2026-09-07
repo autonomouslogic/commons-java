@@ -22,76 +22,12 @@ import org.junit.jupiter.api.Timeout;
  *
  * <p>Issues demonstrated:
  * <ol>
- *   <li><b>Eager input materialisation</b> (major): the {@code Iterator}/{@code Iterable} + {@code Function}/
- *       {@code Consumer} overloads drain the entire input into an {@code ArrayList} before executing anything.
- *       This defeats bounded-memory streaming, prevents overlap of input production and task execution, hangs
- *       forever on unbounded inputs, and is inconsistent with the {@code Stream} overloads, which are lazy.
- *       It also means {@code maxConcurrency} validation only happens after the input is fully consumed.</li>
- *   <li><b>In-flight task leak when input iteration fails</b> (major): if {@code hasNext()}/{@code next()} throws,
- *       already-submitted tasks are never interrupted ({@code shutdown()} instead of {@code shutdownNow()}) and
- *       keep running after the method has thrown — contradicting the class javadoc's claim that the executor is
- *       "cleaned up properly in all cases".</li>
  *   <li><b>Hidden 5-second stall on fail-fast</b> (medium): after a task failure, the hard-coded
  *       {@code awaitTermination(5, SECONDS)} delays exception propagation by up to 5 seconds when a task ignores
  *       interruption, and its return value is ignored, so tasks may still be running when the method throws.</li>
  * </ol>
  */
 class VirtualThreadsShortcomingsTest {
-	/**
-	 * Issue 4: when the input iterator itself throws, the pump propagates the exception but only calls
-	 * shutdown() (graceful), never shutdownNow(). Already-submitted tasks keep running unobserved after
-	 * callAll/runAll has thrown.
-	 */
-	@Nested
-	class InFlightTaskLeakOnInputFailure {
-		@Test
-		@Timeout(10)
-		void inFlightTasksShouldBeCancelledWhenIteratorThrows() throws Exception {
-			var taskStarted = new CountDownLatch(1);
-			var taskInterrupted = new CountDownLatch(1);
-			var blocker = new CountDownLatch(1);
-
-			Callable<Integer> blockingTask = () -> {
-				taskStarted.countDown();
-				try {
-					blocker.await();
-					return 1;
-				} catch (InterruptedException e) {
-					taskInterrupted.countDown();
-					throw e;
-				}
-			};
-			// Yields one task, then fails on the next hasNext() call, while the first task is in flight.
-			var tasks = new Iterator<Callable<Integer>>() {
-				boolean first = true;
-
-				@Override
-				public boolean hasNext() {
-					if (first) {
-						return true;
-					}
-					throw new IllegalStateException("input iteration failed");
-				}
-
-				@Override
-				public Callable<Integer> next() {
-					first = false;
-					return blockingTask;
-				}
-			};
-
-			try {
-				assertThrows(IllegalStateException.class, () -> VirtualThreads.callAll(tasks, 2));
-				assertTrue(taskStarted.await(2, TimeUnit.SECONDS), "submitted task should have started");
-				assertTrue(
-						taskInterrupted.await(500, TimeUnit.MILLISECONDS),
-						"in-flight tasks should be cancelled when input iteration fails, but the task was "
-								+ "left running after callAll threw");
-			} finally {
-				blocker.countDown();
-			}
-		}
-	}
 
 	/**
 	 * Issue 5: the fail-fast path blocks in a hard-coded awaitTermination(5, SECONDS) before rethrowing.
