@@ -1163,6 +1163,81 @@ class VirtualThreadsTest {
 	}
 
 	@Nested
+	class FailFastStallTests {
+		@Test
+		@Timeout(30)
+		void callAllShouldNotStallOnTasksIgnoringInterrupts() {
+			var release = new CountDownLatch(1);
+			var uncooperativeStarted = new CountDownLatch(1);
+
+			Callable<Integer> failing = () -> {
+				uncooperativeStarted.await();
+				throw new RuntimeException("boom");
+			};
+			Callable<Integer> uncooperative = () -> {
+				uncooperativeStarted.countDown();
+				while (true) {
+					try {
+						release.await(15, TimeUnit.SECONDS);
+						break;
+					} catch (InterruptedException e) {
+						// Simulates a task which does not respond to interruption.
+					}
+				}
+				return 2;
+			};
+
+			assertFailFastNoStall(release, () -> VirtualThreads.callAll(List.of(failing, uncooperative), 2));
+		}
+
+		@Test
+		@Timeout(30)
+		void runAllShouldNotStallOnTasksIgnoringInterrupts() {
+			var release = new CountDownLatch(1);
+			var uncooperativeStarted = new CountDownLatch(1);
+
+			Runnable failing = () -> {
+				try {
+					uncooperativeStarted.await();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					return;
+				}
+				throw new RuntimeException("boom");
+			};
+			Runnable uncooperative = () -> {
+				uncooperativeStarted.countDown();
+				while (true) {
+					try {
+						release.await(15, TimeUnit.SECONDS);
+						break;
+					} catch (InterruptedException e) {
+						// Simulates a task which does not respond to interruption.
+					}
+				}
+			};
+
+			assertFailFastNoStall(release, () -> VirtualThreads.runAll(List.of(failing, uncooperative), 2));
+		}
+
+		private static void assertFailFastNoStall(
+				CountDownLatch release, org.junit.jupiter.api.function.Executable action) {
+			var start = System.nanoTime();
+			try {
+				assertThrows(ExecutionException.class, action);
+			} finally {
+				release.countDown();
+			}
+			var elapsedMs = (System.nanoTime() - start) / 1_000_000;
+			assertTrue(
+					elapsedMs < 2000,
+					"task failure should propagate promptly, but took " + elapsedMs
+							+ "ms because of the hard-coded 5s awaitTermination on an uncooperative task "
+							+ "(whose continued execution after the throw is also not reported)");
+		}
+	}
+
+	@Nested
 	class InFlightTaskLeakOnInputFailureTests {
 		@Test
 		@Timeout(10)
@@ -1240,10 +1315,7 @@ class VirtualThreadsTest {
 			try {
 				assertThrows(IllegalStateException.class, action);
 				assertTrue(taskStarted.await(2, TimeUnit.SECONDS), "submitted task should have started");
-				assertTrue(
-						taskInterrupted.await(500, TimeUnit.MILLISECONDS),
-						"in-flight tasks should be cancelled when input iteration fails, but the task was "
-								+ "left running after callAll/runAll threw");
+				assertTrue(taskInterrupted.await(500, TimeUnit.MILLISECONDS));
 			} finally {
 				blocker.countDown();
 			}
