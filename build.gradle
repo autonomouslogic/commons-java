@@ -5,9 +5,9 @@ plugins {
 	id "jacoco"
 	id "io.freefair.lombok" version "9.5.0"
 	id "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin" version "7.0.23"
-	id "com.diffplug.spotless" version "8.9.0"
+	id "com.diffplug.spotless" version "8.10.2"
 	id "signing"
-	id "org.danilopianini.publish-on-central" version "9.2.8"
+	id "org.danilopianini.publish-on-central" version "9.2.10"
 }
 
 group "com.autonomouslogic.commons"
@@ -25,7 +25,7 @@ repositories {
 }
 
 dependencies {
-	implementation "com.google.guava:guava:33.6.0-jre"
+	implementation "com.google.guava:guava:33.7.1-jre"
 	//implementation "com.diffplug.durian:durian:3.4.0"
 
 	compileOnly "io.reactivex.rxjava3:rxjava:3.1.12"
