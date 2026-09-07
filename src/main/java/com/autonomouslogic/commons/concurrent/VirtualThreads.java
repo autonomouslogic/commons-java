@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
@@ -88,6 +89,7 @@ public class VirtualThreads {
 			throw new IllegalArgumentException("maxConcurrency must be > 0");
 		}
 		var executor = Executors.newVirtualThreadPerTaskExecutor();
+		boolean completedNormally = false;
 		try {
 			var completion = new ExecutorCompletionService<Result<T>>(executor);
 			var results = new ArrayList<T>();
@@ -119,31 +121,39 @@ public class VirtualThreads {
 					} catch (ExecutionException e) {
 						executor.shutdownNow();
 
-						try {
-							executor.awaitTermination(5, TimeUnit.SECONDS);
-						} catch (InterruptedException interrupted) {
-							Thread.currentThread().interrupt();
-							e.addSuppressed(interrupted);
+						for (int remaining = inFlight - 1; remaining > 0; remaining--) {
+							try {
+								var future = completion.poll(100, TimeUnit.MILLISECONDS);
+								if (future != null) {
+									try {
+										future.get();
+									} catch (ExecutionException suppressed) {
+										e.addSuppressed(suppressed);
+									} catch (CancellationException | InterruptedException ignored) {
+									}
+								}
+							} catch (InterruptedException interrupted) {
+								Thread.currentThread().interrupt();
+								break;
+							}
 						}
 
 						throw e;
 					}
 				} catch (InterruptedException e) {
 					executor.shutdownNow();
-
-					try {
-						executor.awaitTermination(5, TimeUnit.SECONDS);
-					} catch (InterruptedException suppressed) {
-						e.addSuppressed(suppressed);
-					}
-
 					Thread.currentThread().interrupt();
 					throw e;
 				}
 			}
+			completedNormally = true;
 			return results;
 		} finally {
-			executor.shutdown();
+			if (completedNormally) {
+				executor.shutdown();
+			} else {
+				executor.shutdownNow();
+			}
 		}
 	}
 
@@ -180,6 +190,7 @@ public class VirtualThreads {
 			throw new IllegalArgumentException("maxConcurrency must be > 0");
 		}
 		var executor = Executors.newVirtualThreadPerTaskExecutor();
+		boolean completedNormally = false;
 		try {
 			var completion = new ExecutorCompletionService<Void>(executor);
 			int inFlight = 0;
@@ -202,31 +213,39 @@ public class VirtualThreads {
 					} catch (ExecutionException e) {
 						executor.shutdownNow();
 
-						try {
-							executor.awaitTermination(5, TimeUnit.SECONDS);
-						} catch (InterruptedException interrupted) {
-							Thread.currentThread().interrupt();
-							e.addSuppressed(interrupted);
+						for (int remaining = inFlight - 1; remaining > 0; remaining--) {
+							try {
+								var future = completion.poll(100, TimeUnit.MILLISECONDS);
+								if (future != null) {
+									try {
+										future.get();
+									} catch (ExecutionException suppressed) {
+										e.addSuppressed(suppressed);
+									} catch (CancellationException | InterruptedException ignored) {
+									}
+								}
+							} catch (InterruptedException interrupted) {
+								Thread.currentThread().interrupt();
+								break;
+							}
 						}
 
 						throw e;
 					}
 				} catch (InterruptedException e) {
 					executor.shutdownNow();
-
-					try {
-						executor.awaitTermination(5, TimeUnit.SECONDS);
-					} catch (InterruptedException suppressed) {
-						e.addSuppressed(suppressed);
-					}
-
 					Thread.currentThread().interrupt();
 					throw e;
 				}
 				inFlight--;
 			}
+			completedNormally = true;
 		} finally {
-			executor.shutdown();
+			if (completedNormally) {
+				executor.shutdown();
+			} else {
+				executor.shutdownNow();
+			}
 		}
 	}
 
@@ -258,12 +277,7 @@ public class VirtualThreads {
 	 */
 	public static <T, R> List<R> callAll(@NonNull Iterator<T> inputs, @NonNull Function<T, R> fn, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
-		var tasks = new ArrayList<Callable<R>>();
-		while (inputs.hasNext()) {
-			var input = inputs.next();
-			tasks.add(() -> fn.apply(input));
-		}
-		return callAll(tasks.iterator(), maxConcurrency);
+		return callAll(new MappingIterator<>(inputs, input -> () -> fn.apply(input)), maxConcurrency);
 	}
 
 	/**
@@ -295,12 +309,7 @@ public class VirtualThreads {
 	 */
 	public static <T> void runAll(@NonNull Iterator<T> inputs, @NonNull Consumer<T> action, int maxConcurrency)
 			throws InterruptedException, ExecutionException {
-		var tasks = new ArrayList<Runnable>();
-		while (inputs.hasNext()) {
-			var input = inputs.next();
-			tasks.add(() -> action.accept(input));
-		}
-		runAll(tasks.iterator(), maxConcurrency);
+		runAll(new MappingIterator<>(inputs, input -> () -> action.accept(input)), maxConcurrency);
 	}
 
 	/**
@@ -354,17 +363,22 @@ public class VirtualThreads {
 		if (isVirtual()) {
 			task.run();
 		} else {
-			var exception = new AtomicReference<RuntimeException>();
+			var exception = new AtomicReference<Throwable>();
 			var thread = Thread.ofVirtual().start(() -> {
 				try {
 					task.run();
-				} catch (RuntimeException e) {
+				} catch (Throwable e) {
 					exception.set(e);
 				}
 			});
-			thread.join();
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				thread.interrupt();
+				throw e;
+			}
 			if (exception.get() != null) {
-				throw exception.get();
+				sneakyThrow(exception.get());
 			}
 		}
 	}
@@ -384,19 +398,47 @@ public class VirtualThreads {
 			return task.call();
 		} else {
 			var result = new AtomicReference<T>();
-			var exception = new AtomicReference<Exception>();
+			var thrown = new AtomicReference<Throwable>();
 			var thread = Thread.ofVirtual().start(() -> {
 				try {
 					result.set(task.call());
-				} catch (Exception e) {
-					exception.set(e);
+				} catch (Throwable e) {
+					thrown.set(e);
 				}
 			});
-			thread.join();
-			if (exception.get() != null) {
-				throw exception.get();
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				thread.interrupt();
+				throw e;
+			}
+			if (thrown.get() != null) {
+				sneakyThrow(thrown.get());
 			}
 			return result.get();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <E extends Throwable> void sneakyThrow(Throwable e) throws E {
+		throw (E) e;
+	}
+
+	private static final class MappingIterator<T, R> implements Iterator<R> {
+		private final Iterator<T> delegate;
+		private final Function<T, R> fn;
+
+		MappingIterator(Iterator<T> delegate, Function<T, R> fn) {
+			this.delegate = delegate;
+			this.fn = fn;
+		}
+
+		public boolean hasNext() {
+			return delegate.hasNext();
+		}
+
+		public R next() {
+			return fn.apply(delegate.next());
 		}
 	}
 
