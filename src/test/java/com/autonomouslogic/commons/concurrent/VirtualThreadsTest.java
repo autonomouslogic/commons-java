@@ -553,10 +553,7 @@ class VirtualThreadsTest {
 			var iterator = new CountingIterator();
 			var pulledAtFirstTask = new AtomicInteger(-1);
 
-			VirtualThreads.runAll(
-					iterator,
-					i -> pulledAtFirstTask.compareAndSet(-1, iterator.pulled.get()),
-					1);
+			VirtualThreads.runAll(iterator, i -> pulledAtFirstTask.compareAndSet(-1, iterator.pulled.get()), 1);
 
 			assertEquals(5, iterator.pulled.get());
 			assertEquals(1, pulledAtFirstTask.get());
@@ -594,9 +591,7 @@ class VirtualThreadsTest {
 		@Test
 		void callAllCallableIteratorShouldRejectInvalidMaxConcurrency() {
 			var source = new CountingIterator();
-			assertThrows(
-					IllegalArgumentException.class,
-					() -> VirtualThreads.callAll(callableIterator(source), 0));
+			assertThrows(IllegalArgumentException.class, () -> VirtualThreads.callAll(callableIterator(source), 0));
 			assertEquals(0, source.pulled.get());
 		}
 
@@ -612,20 +607,15 @@ class VirtualThreadsTest {
 		@Test
 		void callAllCallableStreamShouldRejectInvalidMaxConcurrency() {
 			var source = new CountingIterator();
-			var stream = StreamSupport.stream(
-					Spliterators.spliteratorUnknownSize(callableIterator(source), 0), false);
-			assertThrows(
-					IllegalArgumentException.class,
-					() -> VirtualThreads.callAll(stream, 0));
+			var stream = StreamSupport.stream(Spliterators.spliteratorUnknownSize(callableIterator(source), 0), false);
+			assertThrows(IllegalArgumentException.class, () -> VirtualThreads.callAll(stream, 0));
 			assertEquals(0, source.pulled.get());
 		}
 
 		@Test
 		void runAllRunnableIteratorShouldRejectInvalidMaxConcurrency() {
 			var source = new CountingIterator();
-			assertThrows(
-					IllegalArgumentException.class,
-					() -> VirtualThreads.runAll(runnableIterator(source), 0));
+			assertThrows(IllegalArgumentException.class, () -> VirtualThreads.runAll(runnableIterator(source), 0));
 			assertEquals(0, source.pulled.get());
 		}
 
@@ -641,20 +631,15 @@ class VirtualThreadsTest {
 		@Test
 		void runAllRunnableStreamShouldRejectInvalidMaxConcurrency() {
 			var source = new CountingIterator();
-			var stream = StreamSupport.stream(
-					Spliterators.spliteratorUnknownSize(runnableIterator(source), 0), false);
-			assertThrows(
-					IllegalArgumentException.class,
-					() -> VirtualThreads.runAll(stream, 0));
+			var stream = StreamSupport.stream(Spliterators.spliteratorUnknownSize(runnableIterator(source), 0), false);
+			assertThrows(IllegalArgumentException.class, () -> VirtualThreads.runAll(stream, 0));
 			assertEquals(0, source.pulled.get());
 		}
 
 		@Test
 		void callAllFunctionIteratorShouldRejectInvalidMaxConcurrency() {
 			var iterator = new CountingIterator();
-			assertThrows(
-					IllegalArgumentException.class,
-					() -> VirtualThreads.callAll(iterator, i -> i, 0));
+			assertThrows(IllegalArgumentException.class, () -> VirtualThreads.callAll(iterator, i -> i, 0));
 			assertEquals(0, iterator.pulled.get());
 		}
 
@@ -671,18 +656,14 @@ class VirtualThreadsTest {
 		void callAllFunctionStreamShouldRejectInvalidMaxConcurrency() {
 			var iterator = new CountingIterator();
 			var stream = StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false);
-			assertThrows(
-					IllegalArgumentException.class,
-					() -> VirtualThreads.callAll(stream, i -> i, 0));
+			assertThrows(IllegalArgumentException.class, () -> VirtualThreads.callAll(stream, i -> i, 0));
 			assertEquals(0, iterator.pulled.get());
 		}
 
 		@Test
 		void runAllConsumerIteratorShouldRejectInvalidMaxConcurrency() {
 			var iterator = new CountingIterator();
-			assertThrows(
-					IllegalArgumentException.class,
-					() -> VirtualThreads.runAll(iterator, i -> {}, 0));
+			assertThrows(IllegalArgumentException.class, () -> VirtualThreads.runAll(iterator, i -> {}, 0));
 			assertEquals(0, iterator.pulled.get());
 		}
 
@@ -699,9 +680,7 @@ class VirtualThreadsTest {
 		void runAllConsumerStreamShouldRejectInvalidMaxConcurrency() {
 			var iterator = new CountingIterator();
 			var stream = StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false);
-			assertThrows(
-					IllegalArgumentException.class,
-					() -> VirtualThreads.runAll(stream, i -> {}, 0));
+			assertThrows(IllegalArgumentException.class, () -> VirtualThreads.runAll(stream, i -> {}, 0));
 			assertEquals(0, iterator.pulled.get());
 		}
 	}
@@ -1180,6 +1159,94 @@ class VirtualThreadsTest {
 									|| String.valueOf(s.getCause()).contains("secondary failure")),
 					"failures of other in-flight tasks should be retained as suppressed exceptions, "
 							+ "but were dropped: " + Arrays.toString(thrown.getSuppressed()));
+		}
+	}
+
+	@Nested
+	class InFlightTaskLeakOnInputFailureTests {
+		@Test
+		@Timeout(10)
+		void callAllInFlightTasksShouldBeCancelledWhenIteratorThrows() throws Exception {
+			var taskStarted = new CountDownLatch(1);
+			var taskInterrupted = new CountDownLatch(1);
+			var blocker = new CountDownLatch(1);
+
+			Callable<Integer> blockingTask = () -> {
+				taskStarted.countDown();
+				try {
+					blocker.await();
+					return 1;
+				} catch (InterruptedException e) {
+					taskInterrupted.countDown();
+					throw e;
+				}
+			};
+
+			assertInFlightTaskCancelled(
+					taskStarted,
+					taskInterrupted,
+					blocker,
+					() -> VirtualThreads.callAll(faultyIterator(blockingTask), 2));
+		}
+
+		@Test
+		@Timeout(10)
+		void runAllInFlightTasksShouldBeCancelledWhenIteratorThrows() throws Exception {
+			var taskStarted = new CountDownLatch(1);
+			var taskInterrupted = new CountDownLatch(1);
+			var blocker = new CountDownLatch(1);
+
+			Runnable blockingTask = () -> {
+				taskStarted.countDown();
+				try {
+					blocker.await();
+				} catch (InterruptedException e) {
+					taskInterrupted.countDown();
+					Thread.currentThread().interrupt();
+				}
+			};
+
+			assertInFlightTaskCancelled(
+					taskStarted,
+					taskInterrupted,
+					blocker,
+					() -> VirtualThreads.runAll(faultyIterator(blockingTask), 2));
+		}
+
+		private static <T> Iterator<T> faultyIterator(T task) {
+			return new Iterator<>() {
+				boolean yielded = false;
+
+				@Override
+				public boolean hasNext() {
+					if (!yielded) return true;
+					throw new IllegalStateException("input iteration failed");
+				}
+
+				@Override
+				public T next() {
+					yielded = true;
+					return task;
+				}
+			};
+		}
+
+		private static void assertInFlightTaskCancelled(
+				CountDownLatch taskStarted,
+				CountDownLatch taskInterrupted,
+				CountDownLatch blocker,
+				org.junit.jupiter.api.function.Executable action)
+				throws Exception {
+			try {
+				assertThrows(IllegalStateException.class, action);
+				assertTrue(taskStarted.await(2, TimeUnit.SECONDS), "submitted task should have started");
+				assertTrue(
+						taskInterrupted.await(500, TimeUnit.MILLISECONDS),
+						"in-flight tasks should be cancelled when input iteration fails, but the task was "
+								+ "left running after callAll/runAll threw");
+			} finally {
+				blocker.countDown();
+			}
 		}
 	}
 
