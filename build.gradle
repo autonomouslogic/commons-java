@@ -4,10 +4,10 @@ plugins {
 	id "application"
 	id "jacoco"
 	id "io.freefair.lombok" version "9.5.0"
-	id "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin" version "7.0.23"
+	id "org.danilopianini.git-sensitive-semantic-versioning-gradle-plugin" version "7.0.24"
 	id "com.diffplug.spotless" version "8.10.2"
 	id "signing"
-	id "org.danilopianini.publish-on-central" version "9.2.10"
+	id "org.danilopianini.publish-on-central" version "9.2.11"
 }
 
 group "com.autonomouslogic.commons"
