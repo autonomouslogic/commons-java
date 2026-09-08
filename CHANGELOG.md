@@ -1,5 +1,17 @@
 Commons Java Changelog
 
+## [1.11.3](https://github.com/autonomouslogic/commons-java/compare/1.11.2...1.11.3) (2026-09-08)
+
+
+### Bug Fixes
+
+* VirtualThreads in-flight task leak, interrupt leak, throwable swallowing, lazy iterator instantiation ([#111](https://github.com/autonomouslogic/commons-java/issues/111)) ([7609b00](https://github.com/autonomouslogic/commons-java/commit/7609b00d95a5f0d973ee638153c48e208c39da89))
+
+
+### Miscellaneous Chores
+
+* **deps:** update all non-major dependencies ([#113](https://github.com/autonomouslogic/commons-java/issues/113)) ([b487f97](https://github.com/autonomouslogic/commons-java/commit/b487f971b72628119a8c7097fb6c712c48ca32ba))
+
 ## [1.11.2](https://github.com/autonomouslogic/commons-java/compare/1.11.1...1.11.2) (2026-09-07)
 
 
