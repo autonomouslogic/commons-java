@@ -1,5 +1,15 @@
 Commons Java Changelog
 
+## <small>1.11.4 (2026-11-15)</small>
+
+* chore: AGENTS.md ([211f8e9](https://github.com/autonomouslogic/commons-java/commit/211f8e9))
+* chore: AGENTS.md ([b116916](https://github.com/autonomouslogic/commons-java/commit/b116916))
+* chore(deps): update actions/setup-java action to v6 (#110) ([c0d0a0d](https://github.com/autonomouslogic/commons-java/commit/c0d0a0d)), closes [#110](https://github.com/autonomouslogic/commons-java/issues/110)
+* chore(deps): update dependency java-jdk to v25 (#116) ([2627d4d](https://github.com/autonomouslogic/commons-java/commit/2627d4d)), closes [#116](https://github.com/autonomouslogic/commons-java/issues/116)
+* chore(deps): update gradle to v9 (#79) ([3430404](https://github.com/autonomouslogic/commons-java/commit/3430404)), closes [#79](https://github.com/autonomouslogic/commons-java/issues/79)
+* fix(deps): update all non-major dependencies (#115) ([0d55481](https://github.com/autonomouslogic/commons-java/commit/0d55481)), closes [#115](https://github.com/autonomouslogic/commons-java/issues/115)
+* fix(deps): update junit-framework monorepo to v6 (#89) ([12be521](https://github.com/autonomouslogic/commons-java/commit/12be521)), closes [#89](https://github.com/autonomouslogic/commons-java/issues/89)
+
 ## [1.11.3](https://github.com/autonomouslogic/commons-java/compare/1.11.2...1.11.3) (2026-09-08)
 
 
